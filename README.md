@@ -18,7 +18,7 @@ Or install directly from GitHub:
 
 ```bash
 # Install from GitHub repo
-claude plugin install --source github robynnai/robynn-claude-cmo/cmo-agent
+claude plugin install --source github robynnai/robynn-claude-cmo
 ```
 
 ### Option 2: Install as User Skill (Personal)
@@ -30,7 +30,7 @@ Copy to your personal skills directory:
 git clone https://github.com/robynnai/robynn-claude-cmo.git
 
 # Copy to Claude Code skills directory
-cp -r robynn-claude-cmo/cmo-agent ~/.claude/skills/cmo-agent
+cp -r robynn-claude-cmo ~/.claude/skills/robynn-cmo
 ```
 
 ### Option 3: Install as Project Skill (Team)
@@ -40,14 +40,13 @@ Add to your project's `.claude/skills/` directory:
 ```bash
 # In your project root
 mkdir -p .claude/skills
-cp -r /path/to/robynn-claude-cmo/cmo-agent .claude/skills/cmo-agent
+cp -r /path/to/robynn-claude-cmo .claude/skills/robynn-cmo
 ```
 
 ## Setup
 
 1. **Install Python dependencies:**
    ```bash
-   cd ~/.claude/skills/cmo-agent  # or your installation path
    pip install -r requirements.txt
    ```
 
@@ -157,7 +156,6 @@ python tools/ads_unified.py compare --days 30
 
 ```bash
 # Run all tests
-cd cmo-agent
 pytest tests/ -v
 
 # Run with coverage
@@ -167,7 +165,7 @@ pytest tests/ --cov=tools --cov-report=term-missing
 ## Project Structure
 
 ```
-cmo-agent/
+robynn-claude-cmo/
 ├── .claude-plugin/
 │   ├── plugin.json          # Plugin manifest
 │   └── marketplace.json     # Marketplace config
