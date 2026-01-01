@@ -1,0 +1,14 @@
+{
+  "name": "robynn-plugins",
+  "owner": {
+    "name": "Robynn AI",
+    "url": "https://github.com/robynnai"
+  },
+  "plugins": [
+    {
+      "name": "robynn-cmo",
+      "source": "./",
+      "description": "AI-powered Chief Marketing Officer assistant for content creation, market research, competitive intelligence, and advertising automation with safety rails"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "robynn-cmo",
+  "description": "AI-powered Chief Marketing Officer assistant for content creation, market research, and advertising automation with safety rails",
+  "version": "1.0.0",
+  "author": {
+    "name": "Robynn AI",
+    "url": "https://github.com/robynnai"
+  },
+  "repository": "https://github.com/robynnai/robynn-claude-cmo",
+  "license": "MIT",
+  "keywords": [
+    "marketing",
+    "content",
+    "research",
+    "advertising",
+    "google-ads",
+    "linkedin-ads",
+    "apollo",
+    "cmo"
+  ],
+  "skills": "./skills/"
+}
