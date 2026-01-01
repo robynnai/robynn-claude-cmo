@@ -50,6 +50,21 @@ except ImportError:
     GoogleAdsClient = None
     GoogleAdsException = Exception
 
+# Import error handling utilities
+try:
+    from tools.errors import format_missing_credential_error, format_error_message
+except ImportError:
+    # Fallback if errors module not available
+    def format_missing_credential_error(service: str) -> dict:
+        return {
+            "error": True,
+            "service": service,
+            "message": f"{service} credentials not configured",
+            "recovery_steps": [f"Configure {service} API credentials in .env file"]
+        }
+    def format_error_message(error_dict: dict) -> str:
+        return error_dict.get("message", "Unknown error")
+
 
 class AdsConfig:
     """Load and manage ads configuration."""
@@ -103,37 +118,40 @@ class AdsConfig:
 class GoogleAdsAPI:
     """
     Google Ads API wrapper with safety features.
-    
+
     Can operate in two modes:
     1. Direct API mode (requires google-ads library)
     2. MCP mode (delegates to MCP server)
     """
-    
+
+    SERVICE_NAME = "google_ads"
+
     def __init__(self, config: Optional[AdsConfig] = None):
         self.config = config or AdsConfig()
         self.client = None
+        self._is_available = False
+        self._availability_reason = None
         self._init_client()
-    
+
     def _init_client(self):
         """Initialize Google Ads client from environment variables."""
         if not GOOGLE_ADS_AVAILABLE:
-            print("⚠️  google-ads library not installed. Install with: pip install google-ads")
+            self._availability_reason = "google-ads library not installed. Install with: pip install google-ads"
             return
-        
+
         # Check for required credentials
         required_vars = [
             "GOOGLE_ADS_DEVELOPER_TOKEN",
-            "GOOGLE_ADS_CLIENT_ID", 
+            "GOOGLE_ADS_CLIENT_ID",
             "GOOGLE_ADS_CLIENT_SECRET",
             "GOOGLE_ADS_REFRESH_TOKEN"
         ]
-        
+
         missing = [v for v in required_vars if not os.getenv(v)]
         if missing:
-            print(f"⚠️  Missing environment variables: {', '.join(missing)}")
-            print("   See agents/ads/google-ads.md for setup instructions.")
+            self._availability_reason = f"Missing environment variables: {', '.join(missing)}"
             return
-        
+
         try:
             # Build configuration dict
             config_dict = {
@@ -143,20 +161,47 @@ class GoogleAdsAPI:
                 "refresh_token": os.getenv("GOOGLE_ADS_REFRESH_TOKEN"),
                 "use_proto_plus": True
             }
-            
+
             login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
             if login_customer_id:
                 config_dict["login_customer_id"] = login_customer_id
-            
+
             self.client = GoogleAdsClient.load_from_dict(config_dict)
-            print("✅ Google Ads client initialized")
-            
+            self._is_available = True
+
         except Exception as e:
-            print(f"❌ Failed to initialize Google Ads client: {e}")
-    
+            self._availability_reason = f"Failed to initialize client: {e}"
+
+    @property
+    def is_available(self) -> bool:
+        """Check if the client has valid credentials configured."""
+        return self._is_available
+
+    def get_availability_error(self) -> Dict[str, Any]:
+        """Get structured error information when credentials are missing."""
+        error = format_missing_credential_error(self.SERVICE_NAME)
+        if self._availability_reason:
+            error["details"] = self._availability_reason
+        return error
+
+    def get_availability_message(self) -> str:
+        """Get human-readable error message when credentials are missing."""
+        msg = format_error_message(self.get_availability_error())
+        if self._availability_reason:
+            msg += f"\nDetails: {self._availability_reason}"
+        return msg
+
+    def _check_availability(self) -> Optional[Dict[str, Any]]:
+        """Check if client is available, return error dict if not."""
+        if not self._is_available:
+            error = self.get_availability_error()
+            error["data"] = None
+            return error
+        return None
+
     def has_credentials(self) -> bool:
-        """Check if credentials are configured."""
-        return self.client is not None
+        """Check if credentials are configured (alias for is_available)."""
+        return self._is_available
     
     # =========================================================================
     # READ OPERATIONS
@@ -616,10 +661,7 @@ class GoogleAdsAPI:
     
     def _no_client_error(self) -> Dict:
         """Return error when client is not initialized."""
-        return {
-            "error": "Google Ads client not initialized",
-            "help": "Check credentials in .env file. See agents/ads/google-ads.md for setup."
-        }
+        return self.get_availability_error()
     
     def _handle_error(self, e: Exception) -> Dict:
         """Handle Google Ads API errors."""
@@ -753,13 +795,18 @@ Examples:
     parser.add_argument("--format", choices=["table", "json"], default="table", help="Output format")
     
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return
-    
+
     # Initialize API
     api = GoogleAdsAPI()
+
+    # Check if credentials are available
+    if not api.is_available:
+        print(api.get_availability_message(), file=sys.stderr)
+        sys.exit(1)
     
     # Execute command
     if args.command == "accounts":

@@ -12,32 +12,64 @@ Features:
 
 Usage:
     from tools.apollo import ApolloClient
-    
+
     client = ApolloClient()
-    
+
+    # Check if available
+    if not client.is_available:
+        print(client.get_availability_error())
+
     # Search for people
     contacts = client.people_search(
         titles=["VP Marketing", "CMO"],
         company_size=["50-200"],
         limit=25
     )
-    
+
     # Enrich a contact
     contact = client.enrich_person(email="john@example.com")
-    
+
     # Get company data
     company = client.company_search(domain="example.com")
 """
 
 from typing import Optional, Any
-from tools.base import BaseAPIClient, get_credential, extract_domain
+from tools.base import BaseAPIClient, get_credential, has_credential, extract_domain
+from tools.errors import format_missing_credential_error, format_error_message
 
 
 class ApolloClient(BaseAPIClient):
     """Apollo.io API client for contact and company data."""
-    
+
     BASE_URL = "https://api.apollo.io/v1"
-    
+    SERVICE_NAME = "apollo"
+
+    def __init__(self):
+        self._is_available = has_credential(self.SERVICE_NAME, "api_key")
+        if self._is_available:
+            super().__init__()
+
+    @property
+    def is_available(self) -> bool:
+        """Check if the client has valid credentials configured."""
+        return self._is_available
+
+    def get_availability_error(self) -> dict[str, Any]:
+        """Get structured error information when credentials are missing."""
+        return format_missing_credential_error(self.SERVICE_NAME)
+
+    def get_availability_message(self) -> str:
+        """Get human-readable error message when credentials are missing."""
+        return format_error_message(self.get_availability_error())
+
+    def _check_availability(self) -> Optional[dict[str, Any]]:
+        """Check if client is available, return error dict if not."""
+        if not self._is_available:
+            error = self.get_availability_error()
+            error["data"] = None
+            return error
+        return None
+
     def _get_headers(self) -> dict[str, str]:
         api_key = get_credential("apollo", "api_key")
         return {
@@ -65,7 +97,7 @@ class ApolloClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Search for people matching criteria.
-        
+
         Args:
             titles: Job titles to search (e.g., ["VP Marketing", "CMO"])
             company: Company name
@@ -77,23 +109,24 @@ class ApolloClient(BaseAPIClient):
             keywords: Keyword search across profiles
             page: Page number (1-indexed)
             limit: Results per page (max 100)
-        
+
         Returns:
             {
                 "people": [...],
-                "pagination": {
-                    "page": int,
-                    "per_page": int,
-                    "total_entries": int,
-                    "total_pages": int
-                }
+                "pagination": {...}
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         payload: dict[str, Any] = {
             "page": page,
             "per_page": min(limit, 100)
         }
-        
+
         if titles:
             payload["person_titles"] = titles
         if company:
@@ -110,7 +143,7 @@ class ApolloClient(BaseAPIClient):
             payload["person_seniorities"] = seniority
         if keywords:
             payload["q_keywords"] = keywords
-        
+
         return self.post("/mixed_people/search", json=payload)
     
     def enrich_person(
@@ -123,32 +156,29 @@ class ApolloClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Enrich a person's profile with contact data.
-        
+
         Provide either email OR LinkedIn URL OR (name + company).
-        
+
         Args:
             email: Person's email address
             linkedin_url: LinkedIn profile URL
             first_name: First name (requires last_name and company_domain)
             last_name: Last name (requires first_name and company_domain)
             company_domain: Company domain (used with name)
-        
+
         Returns:
             {
-                "person": {
-                    "id": "...",
-                    "first_name": "...",
-                    "last_name": "...",
-                    "email": "...",
-                    "phone": "...",
-                    "linkedin_url": "...",
-                    "title": "...",
-                    "organization": {...}
-                }
+                "person": {...}
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         payload: dict[str, Any] = {}
-        
+
         if email:
             payload["email"] = email
         elif linkedin_url:
@@ -158,10 +188,11 @@ class ApolloClient(BaseAPIClient):
             payload["last_name"] = last_name
             payload["domain"] = company_domain
         else:
-            raise ValueError(
-                "Provide email, linkedin_url, or (first_name + last_name + company_domain)"
-            )
-        
+            return {
+                "error": True,
+                "message": "Provide email, linkedin_url, or (first_name + last_name + company_domain)"
+            }
+
         return self.post("/people/match", json=payload)
     
     def bulk_enrich_people(
@@ -171,24 +202,30 @@ class ApolloClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Bulk enrich multiple people.
-        
+
         Args:
             emails: List of email addresses
             linkedin_urls: List of LinkedIn URLs
-        
+
         Returns:
             {
                 "matches": [...],
                 "status": "..."
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         payload: dict[str, Any] = {}
-        
+
         if emails:
             payload["emails"] = emails
         if linkedin_urls:
             payload["linkedin_urls"] = linkedin_urls
-        
+
         return self.post("/people/bulk_match", json=payload)
     
     # ========================================================================
@@ -208,7 +245,7 @@ class ApolloClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Search for companies matching criteria.
-        
+
         Args:
             domain: Company domain (e.g., "example.com")
             name: Company name
@@ -218,13 +255,19 @@ class ApolloClient(BaseAPIClient):
             keywords: Keyword search
             page: Page number
             limit: Results per page
-        
+
         Returns:
             {
                 "organizations": [...],
                 "pagination": {...}
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         payload: dict[str, Any] = {
             "page": page,
             "per_page": min(limit, 100)
@@ -248,10 +291,10 @@ class ApolloClient(BaseAPIClient):
     def enrich_company(self, domain: str) -> dict[str, Any]:
         """
         Enrich company data by domain.
-        
+
         Args:
             domain: Company domain
-        
+
         Returns:
             {
                 "organization": {
@@ -266,7 +309,13 @@ class ApolloClient(BaseAPIClient):
                     "technologies": [...]
                 }
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         payload = {
             "domain": extract_domain(domain)
         }
@@ -344,10 +393,11 @@ def main():
     """CLI entry point for Apollo tools."""
     import argparse
     import json
-    
+    import sys
+
     parser = argparse.ArgumentParser(description="Apollo.io contact and company data")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # People search command
     people_parser = subparsers.add_parser("people", help="Search for people")
     people_parser.add_argument("--titles", nargs="+", help="Job titles to search")
@@ -357,22 +407,27 @@ def main():
     people_parser.add_argument("--seniority", nargs="+", choices=["c_suite", "vp", "director", "manager", "senior", "entry"])
     people_parser.add_argument("--limit", type=int, default=25)
     people_parser.add_argument("--output", choices=["json", "table"], default="table")
-    
+
     # Enrich person command
     enrich_parser = subparsers.add_parser("enrich", help="Enrich a person")
     enrich_parser.add_argument("--email", help="Email address")
     enrich_parser.add_argument("--linkedin", help="LinkedIn URL")
     enrich_parser.add_argument("--name", help="Full name (requires --domain)")
     enrich_parser.add_argument("--domain", help="Company domain (for name lookup)")
-    
+
     # Company search command
     company_parser = subparsers.add_parser("company", help="Search/enrich company")
     company_parser.add_argument("domain", help="Company domain")
     company_parser.add_argument("--employees", action="store_true", help="Also fetch employees")
-    
+
     args = parser.parse_args()
     client = ApolloClient()
-    
+
+    # Check if credentials are available
+    if not client.is_available:
+        print(client.get_availability_message(), file=sys.stderr)
+        sys.exit(1)
+
     try:
         if args.command == "people":
             result = client.people_search(

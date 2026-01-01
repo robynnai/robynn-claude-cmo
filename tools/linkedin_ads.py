@@ -45,6 +45,21 @@ except ImportError:
     HTTPX_AVAILABLE = False
     httpx = None
 
+# Import error handling utilities
+try:
+    from tools.errors import format_missing_credential_error, format_error_message
+except ImportError:
+    # Fallback if errors module not available
+    def format_missing_credential_error(service: str) -> dict:
+        return {
+            "error": True,
+            "service": service,
+            "message": f"{service} credentials not configured",
+            "recovery_steps": [f"Configure {service} API credentials in .env file"]
+        }
+    def format_error_message(error_dict: dict) -> str:
+        return error_dict.get("message", "Unknown error")
+
 
 class AdsConfig:
     """Load and manage ads configuration."""
@@ -107,28 +122,62 @@ class LinkedInAdsAPI:
     """
     LinkedIn Marketing API wrapper with safety features.
     """
-    
+
     BASE_URL = "https://api.linkedin.com/rest"
-    
+    SERVICE_NAME = "linkedin_ads"
+
     def __init__(self, config: Optional[AdsConfig] = None):
         self.config = config or AdsConfig()
         self.access_token = os.getenv("LINKEDIN_ACCESS_TOKEN")
         self.ad_account_id = os.getenv("LINKEDIN_AD_ACCOUNT_ID")
         self.api_version = self.config.get_api_version()
-        
+        self._is_available = False
+        self._availability_reason = None
+
         self._validate_credentials()
-    
+
     def _validate_credentials(self):
         """Check if credentials are configured."""
+        if not HTTPX_AVAILABLE:
+            self._availability_reason = "httpx library not installed. Install with: pip install httpx"
+            return
+
         if not self.access_token:
-            print("⚠️  LINKEDIN_ACCESS_TOKEN not set in environment")
-            print("   See agents/ads/linkedin-ads.md for setup instructions.")
-        else:
-            print("✅ LinkedIn Ads credentials configured")
-    
+            self._availability_reason = "LINKEDIN_ACCESS_TOKEN not set in environment"
+            return
+
+        self._is_available = True
+
+    @property
+    def is_available(self) -> bool:
+        """Check if the client has valid credentials configured."""
+        return self._is_available
+
+    def get_availability_error(self) -> Dict[str, Any]:
+        """Get structured error information when credentials are missing."""
+        error = format_missing_credential_error(self.SERVICE_NAME)
+        if self._availability_reason:
+            error["details"] = self._availability_reason
+        return error
+
+    def get_availability_message(self) -> str:
+        """Get human-readable error message when credentials are missing."""
+        msg = format_error_message(self.get_availability_error())
+        if self._availability_reason:
+            msg += f"\nDetails: {self._availability_reason}"
+        return msg
+
+    def _check_availability(self) -> Optional[Dict[str, Any]]:
+        """Check if client is available, return error dict if not."""
+        if not self._is_available:
+            error = self.get_availability_error()
+            error["data"] = None
+            return error
+        return None
+
     def has_credentials(self) -> bool:
-        """Check if credentials are configured."""
-        return bool(self.access_token)
+        """Check if credentials are configured (alias for is_available)."""
+        return self._is_available
     
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests."""
@@ -147,11 +196,10 @@ class LinkedInAdsAPI:
         data: Optional[Dict] = None
     ) -> Dict:
         """Make API request to LinkedIn."""
-        if not HTTPX_AVAILABLE:
-            return {"error": "httpx library not installed. Run: pip install httpx"}
-        
-        if not self.access_token:
-            return {"error": "Access token not configured"}
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
         
         url = f"{self.BASE_URL}{endpoint}"
         
@@ -795,14 +843,19 @@ Examples:
     parser.add_argument("--format", choices=["table", "json"], default="table", help="Output format")
     
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return
-    
+
     # Initialize API
     api = LinkedInAdsAPI()
-    
+
+    # Check if credentials are available
+    if not api.is_available:
+        print(api.get_availability_message(), file=sys.stderr)
+        sys.exit(1)
+
     # Execute command
     if args.command == "accounts":
         results = api.list_ad_accounts()

@@ -27,14 +27,42 @@ Usage:
 """
 
 from typing import Optional, Any
-from tools.base import BaseAPIClient, get_credential
+from tools.base import BaseAPIClient, get_credential, has_credential
+from tools.errors import format_missing_credential_error, format_error_message
 
 
 class ProxycurlClient(BaseAPIClient):
     """Proxycurl API client for LinkedIn data."""
-    
+
     BASE_URL = "https://nubela.co/proxycurl/api"
-    
+    SERVICE_NAME = "proxycurl"
+
+    def __init__(self):
+        self._is_available = has_credential(self.SERVICE_NAME, "api_key")
+        if self._is_available:
+            super().__init__()
+
+    @property
+    def is_available(self) -> bool:
+        """Check if the client has valid credentials configured."""
+        return self._is_available
+
+    def get_availability_error(self) -> dict[str, Any]:
+        """Get structured error information when credentials are missing."""
+        return format_missing_credential_error(self.SERVICE_NAME)
+
+    def get_availability_message(self) -> str:
+        """Get human-readable error message when credentials are missing."""
+        return format_error_message(self.get_availability_error())
+
+    def _check_availability(self) -> Optional[dict[str, Any]]:
+        """Check if client is available, return error dict if not."""
+        if not self._is_available:
+            error = self.get_availability_error()
+            error["data"] = None
+            return error
+        return None
+
     def _get_headers(self) -> dict[str, str]:
         api_key = get_credential("proxycurl", "api_key")
         return {
@@ -59,7 +87,7 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Get full LinkedIn profile data for a person.
-        
+
         Args:
             linkedin_url: LinkedIn profile URL
             skills: Include skills
@@ -70,7 +98,7 @@ class ProxycurlClient(BaseAPIClient):
             honors: Include honors/awards
             personal_emails: Include personal emails (extra credit cost)
             personal_numbers: Include personal phone (extra credit cost)
-        
+
         Returns:
             {
                 "public_identifier": "...",
@@ -89,7 +117,13 @@ class ProxycurlClient(BaseAPIClient):
                 "follower_count": int,
                 ...
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "url": linkedin_url,
             "skills": "include" if skills else "exclude",
@@ -108,11 +142,11 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Get recent posts from a LinkedIn profile.
-        
+
         Args:
             linkedin_url: LinkedIn profile URL
             limit: Max posts to return
-        
+
         Returns:
             {
                 "posts": [
@@ -125,7 +159,13 @@ class ProxycurlClient(BaseAPIClient):
                     }
                 ]
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "linkedin_person_profile_url": linkedin_url,
             "page_size": min(limit, 50)
@@ -136,16 +176,22 @@ class ProxycurlClient(BaseAPIClient):
     def lookup_person_by_email(self, email: str) -> dict[str, Any]:
         """
         Find LinkedIn profile by email address.
-        
+
         Args:
             email: Email address
-        
+
         Returns:
             {
                 "url": "linkedin_profile_url" or null,
                 ...
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {"email": email}
         return self.get("/linkedin/profile/resolve/email", params=params)
     
@@ -160,7 +206,7 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Find LinkedIn profile by name and company.
-        
+
         Args:
             first_name: First name
             last_name: Last name
@@ -168,10 +214,15 @@ class ProxycurlClient(BaseAPIClient):
             company_name: Company name
             title: Job title
             location: Location string
-        
+
         Returns:
-            Profile data if found
+            Profile data if found, or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "first_name": first_name,
             "last_name": last_name,
@@ -200,11 +251,11 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Get LinkedIn company page data.
-        
+
         Args:
             linkedin_url: LinkedIn company URL
             resolve_numeric_id: Include numeric company ID
-        
+
         Returns:
             {
                 "name": "...",
@@ -217,7 +268,13 @@ class ProxycurlClient(BaseAPIClient):
                 "follower_count": int,
                 ...
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "url": linkedin_url,
             "resolve_numeric_id": str(resolve_numeric_id).lower()
@@ -228,16 +285,22 @@ class ProxycurlClient(BaseAPIClient):
     def lookup_company_by_domain(self, domain: str) -> dict[str, Any]:
         """
         Find LinkedIn company page by domain.
-        
+
         Args:
             domain: Company website domain
-        
+
         Returns:
             {
                 "url": "linkedin_company_url" or null,
                 ...
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {"domain": domain}
         return self.get("/linkedin/company/resolve", params=params)
     
@@ -250,20 +313,26 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Get employees at a company.
-        
+
         Args:
             linkedin_url: LinkedIn company URL
             page_size: Results per page
             country: Filter by country
             keyword_filter: Filter by keyword in profile
-        
+
         Returns:
             {
                 "employees": [
                     {"profile_url": "...", "profile": {...}}
                 ]
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "url": linkedin_url,
             "page_size": min(page_size, 100),
@@ -288,11 +357,11 @@ class ProxycurlClient(BaseAPIClient):
     ) -> dict[str, Any]:
         """
         Get job listings from a company.
-        
+
         Args:
             linkedin_url: LinkedIn company URL
             limit: Max jobs to return
-        
+
         Returns:
             {
                 "jobs": [
@@ -304,7 +373,13 @@ class ProxycurlClient(BaseAPIClient):
                     }
                 ]
             }
+            Or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         params = {
             "url": linkedin_url,
             "page_size": min(limit, 100)
@@ -319,9 +394,15 @@ class ProxycurlClient(BaseAPIClient):
     def get_profile_summary(self, linkedin_url: str) -> dict[str, Any]:
         """
         Get a summarized view of a LinkedIn profile.
-        
-        Returns key info for outreach personalization.
+
+        Returns key info for outreach personalization,
+        or error dict with recovery steps if credentials missing.
         """
+        # Check if credentials are available
+        error = self._check_availability()
+        if error:
+            return error
+
         profile = self.get_person_profile(
             linkedin_url,
             skills=True,
@@ -375,31 +456,37 @@ def main():
     """CLI entry point for Proxycurl tools."""
     import argparse
     import json
-    
+    import sys
+
     parser = argparse.ArgumentParser(description="Proxycurl LinkedIn data")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # Person profile command
     person_parser = subparsers.add_parser("person", help="Get person profile")
     person_parser.add_argument("url", help="LinkedIn profile URL")
     person_parser.add_argument("--summary", action="store_true", help="Return summary only")
     person_parser.add_argument("--posts", action="store_true", help="Include recent posts")
-    
+
     # Company profile command
     company_parser = subparsers.add_parser("company", help="Get company profile")
     company_parser.add_argument("url", help="LinkedIn company URL or domain")
     company_parser.add_argument("--employees", action="store_true", help="Include employees")
     company_parser.add_argument("--jobs", action="store_true", help="Include job listings")
-    
+
     # Lookup commands
     lookup_parser = subparsers.add_parser("lookup", help="Find LinkedIn profile")
     lookup_parser.add_argument("--email", help="Lookup by email")
     lookup_parser.add_argument("--name", help="First and last name")
     lookup_parser.add_argument("--company", help="Company name or domain")
-    
+
     args = parser.parse_args()
     client = ProxycurlClient()
-    
+
+    # Check if credentials are available
+    if not client.is_available:
+        print(client.get_availability_message(), file=sys.stderr)
+        sys.exit(1)
+
     try:
         if args.command == "person":
             if args.summary:
