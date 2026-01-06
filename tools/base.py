@@ -147,6 +147,22 @@ def has_credential(service: str, key: str = "api_key") -> bool:
     return get_broker().has(service, key)
 
 
+def has_robynn_connection() -> bool:
+    """Check if the agent is connected to the Robynn platform."""
+    return os.environ.get("ROBYNN_API_KEY") is not None
+
+
+def get_robynn_context() -> Optional[dict[str, Any]]:
+    """Fetch brand context from Robynn platform if connected."""
+    if not has_robynn_connection():
+        return None
+    
+    # Lazy import to avoid circular dependencies
+    from tools.robynn import RobynnClient
+    client = RobynnClient()
+    return client.fetch_context()
+
+
 # ============================================================================
 # Base HTTP Client
 # ============================================================================

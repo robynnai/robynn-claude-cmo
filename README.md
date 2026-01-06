@@ -1,6 +1,6 @@
 # Robynn CMO Agent
 
-AI-powered Chief Marketing Officer assistant for Claude Code. Create content, research companies, find contacts, and manage advertising campaigns with built-in safety rails.
+AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your marketing strategy, research, and content creation to a remote-first expert agent.
 
 ## Installation
 
@@ -14,16 +14,7 @@ AI-powered Chief Marketing Officer assistant for Claude Code. Create content, re
 /plugin install robynn-cmo@robynn-plugins
 ```
 
-Or install directly from GitHub:
-
-```bash
-# Install from GitHub repo
-claude plugin install --source github robynnai/robynn-claude-cmo
-```
-
 ### Option 2: Install as User Skill (Personal)
-
-Copy to your personal skills directory:
 
 ```bash
 # Clone the repo
@@ -33,16 +24,6 @@ git clone https://github.com/robynnai/robynn-claude-cmo.git
 cp -r robynn-claude-cmo ~/.claude/skills/robynn-cmo
 ```
 
-### Option 3: Install as Project Skill (Team)
-
-Add to your project's `.claude/skills/` directory:
-
-```bash
-# In your project root
-mkdir -p .claude/skills
-cp -r /path/to/robynn-claude-cmo .claude/skills/robynn-cmo
-```
-
 ## Setup
 
 1. **Install Python dependencies:**
@@ -50,142 +31,62 @@ cp -r /path/to/robynn-claude-cmo .claude/skills/robynn-cmo
    pip install -r requirements.txt
    ```
 
-2. **Configure API keys:**
+2. **Configure Robynn API Key:**
    ```bash
    cp .env.example .env
-   # Edit .env with your API keys
+   # Edit .env and add your ROBYNN_API_KEY
+   # Get your key at https://app.robynn.ai/settings/api-keys
    ```
 
-3. **Verify installation:**
+3. **Verify connection:**
    ```bash
-   python tools/ads_unified.py status
+   python tools/robynn.py status
    ```
 
-## Features
+## Features (Free & Pro)
 
-### Content Agent
-- LinkedIn posts, tweets, blog outlines
-- Cold emails, one-pagers
-- Brand-consistent content with templates
+### 🚀 Founder Essentials (Free)
+- **Landing Page Roast**: Get a conversion audit and copy rewrite for your URL.
+- **GTM Sprint**: Generate a tactical 7-day action plan to find your first 100 users.
+- **Viral Social Hooks**: Turn your technical updates/git diffs into engaging LinkedIn posts.
+- **Competitive Blindspots**: Identify exactly where your competitors are failing in their messaging.
 
-### Research Agent
-| Capability | Tools |
-|------------|-------|
-| Company Research | Clearbit, Apollo, Firecrawl |
-| Competitive Intel | G2, Capterra, web scraping |
-| People Finding | Apollo, Proxycurl (LinkedIn) |
-| Tech Detection | BuiltWith |
-
-### Ads Agent
-| Platform | Capabilities |
-|----------|--------------|
-| Google Ads | Campaigns, ad groups, keywords, GAQL |
-| LinkedIn Ads | B2B campaigns, targeting, analytics |
-
-**Safety Features:**
-- All campaigns created in DRAFT/PAUSED mode
-- Configurable budget limits (default: $0)
-- Confirmation required for spending
-- Full audit logging
+### 📈 Marketing Operations
+- **Content Creation**: High-quality LinkedIn posts, blogs, and cold emails.
+- **Market Research**: Deep-dive company research and contact finding (Apollo integration).
+- **Ads Management**: Performance analysis and draft campaign creation for Google & LinkedIn.
 
 ## Usage Examples
 
 Once installed, just ask Claude:
 
 ```
+"Roast our landing page at https://my-startup.com"
 "Write a LinkedIn post about our new AI feature"
 "Research Stripe and find their marketing team contacts"
 "Show me our Google Ads performance for the last 30 days"
-"Create a competitive analysis of HubSpot vs Salesforce"
 ```
 
-## API Keys Required
+## How It Works
 
-| Tool | Purpose | Free Tier |
-|------|---------|-----------|
-| Firecrawl | Web scraping | ✅ 500 credits/mo |
-| Apollo | Contact data | ✅ 10k credits |
-| Proxycurl | LinkedIn profiles | ✅ 10 credits |
-| Clearbit | Company enrichment | ❌ Paid |
-| BuiltWith | Tech detection | ✅ Fallback |
-| Google Ads | Ad management | ✅ API is free |
-| LinkedIn Ads | Ad management | ✅ API is free |
+The Robynn CMO Agent uses a **"Thin Client"** architecture. While the local plugin provides the interface, the complex reasoning, system prompts, and tool integrations (Apollo, Clearbit, Firecrawl, etc.) are handled by Robynn's remote infrastructure.
 
-## Tool Reference
-
-### Research Tools
-
-```bash
-# Web scraping
-python tools/firecrawl.py scrape https://example.com
-
-# Company data
-python tools/clearbit.py company stripe.com
-python tools/apollo.py company stripe.com
-
-# Contact finding
-python tools/apollo.py people --company Stripe --titles "VP Marketing"
-python tools/proxycurl.py person "https://linkedin.com/in/username"
-
-# Tech stack
-python tools/builtwith.py lookup stripe.com
-```
-
-### Ads Tools
-
-```bash
-# Check credentials
-python tools/ads_unified.py status
-
-# Google Ads
-python tools/google_ads.py accounts
-python tools/google_ads.py campaigns --customer-id 1234567890
-python tools/google_ads.py performance --customer-id 1234567890 --days 30
-
-# LinkedIn Ads
-python tools/linkedin_ads.py accounts
-python tools/linkedin_ads.py campaigns --account-id 123456789
-python tools/linkedin_ads.py analytics --campaign-id 123456 --days 30
-
-# Cross-platform
-python tools/ads_unified.py summary
-python tools/ads_unified.py compare --days 30
-```
-
-## Testing
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=tools --cov-report=term-missing
-```
+- **Free Tier**: Anonymous, rate-limited access with generic marketing context.
+- **Pro Tier**: Connect your Robynn account (`python tools/robynn.py init <key>`) to unlock your **Brand Hub** context, ensuring every response follows your specific brand voice and strategy.
 
 ## Project Structure
 
 ```
 robynn-claude-cmo/
-├── .claude-plugin/
-│   ├── plugin.json          # Plugin manifest
-│   └── marketplace.json     # Marketplace config
-├── skills/                   # Claude Code skills
-│   ├── cmo/SKILL.md         # Main orchestrator
-│   ├── content/SKILL.md     # Content creation
-│   ├── research/SKILL.md    # Market research
-│   └── ads/SKILL.md         # Advertising
-├── agents/                   # Agent playbooks
-│   ├── content/             # Content templates
-│   ├── research/            # Research workflows
-│   └── ads/                 # Platform guides
-├── tools/                    # Python API clients
-│   ├── apollo.py            # Contact data
-│   ├── firecrawl.py         # Web scraping
-│   ├── google_ads.py        # Google Ads API
-│   ├── linkedin_ads.py      # LinkedIn Ads API
+├── skills/                   # Claude Code skills (Thin Client)
+│   ├── cmo/SKILL.md         # Main CMO orchestrator
+│   ├── content/SKILL.md     # Content creation redirect
+│   ├── research/SKILL.md    # Research redirect
+│   └── ads/SKILL.md         # Advertising redirect
+├── tools/                    # Python bridge tools
+│   ├── remote_cmo.py        # Remote agent execution bridge
+│   ├── robynn.py            # Platform connection management
 │   └── ...
-├── knowledge/               # Brand context
-├── tests/                   # Test suite (136+ tests)
 └── .env.example            # API key template
 ```
 

@@ -1,0 +1,180 @@
+import os
+import sys
+import json
+import httpx
+from pathlib import Path
+from typing import Optional, Dict, Any
+
+# ============================================================================
+# Configuration & Constants
+# ============================================================================
+
+ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+ENV_FILE_NAME = ".env"
+
+# ============================================================================
+# Robynn Client Utility
+# ============================================================================
+
+class RobynnClient:
+    """Client for interacting with the Robynn platform API."""
+    
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("ROBYNN_API_KEY")
+        self.base_url = ROBYNN_API_BASE_URL
+        
+    def _get_headers(self) -> Dict[str, str]:
+        if not self.api_key:
+            return {"Content-Type": "application/json"}
+        return {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+
+    def validate_key(self, key: str) -> bool:
+        """Validate an API key by fetching context."""
+        try:
+            with httpx.Client(headers={"Authorization": f"Bearer {key}"}) as client:
+                response = client.get(f"{self.base_url}/context")
+                return response.status_code == 200
+        except Exception as e:
+            print(f"Error validating key: {e}")
+            return False
+
+    def fetch_context(self) -> Optional[Dict[str, Any]]:
+        """Fetch brand context from the platform."""
+        if not self.api_key:
+            return None
+        try:
+            with httpx.Client(headers=self._get_headers()) as client:
+                response = client.get(f"{self.base_url}/context")
+                response.raise_for_status()
+                return response.json().get("data")
+        except Exception as e:
+            print(f"Error fetching brand context: {e}")
+            return None
+
+    def fetch_usage(self) -> Optional[Dict[str, Any]]:
+        """Fetch CMO usage details."""
+        if not self.api_key:
+            return None
+        try:
+            with httpx.Client(headers=self._get_headers()) as client:
+                response = client.get(f"{self.base_url}/usage")
+                response.raise_for_status()
+                return response.json().get("data")
+        except Exception as e:
+            print(f"Error fetching usage details: {e}")
+            return None
+
+# ============================================================================
+# CLI Commands
+# ============================================================================
+
+def init_command(api_key: str):
+    """Initialize the Robynn connection with an API key."""
+    print(f"Verifying API key with Robynn AI...")
+    client = RobynnClient(api_key)
+    
+    if not client.validate_key(api_key):
+        print("\n❌ Invalid API key.")
+        print("1. Sign up/Login at https://app.robynn.ai")
+        print("2. Go to Settings > API Keys")
+        print("3. Copy your key and try again: python tools/robynn.py init <key>")
+        sys.exit(1)
+    
+    # Save to .env file
+    env_path = Path(ENV_FILE_NAME)
+    lines = []
+    key_exists = False
+    
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if line.startswith("ROBYNN_API_KEY="):
+                lines.append(f"ROBYNN_API_KEY={api_key}")
+                key_exists = True
+            else:
+                lines.append(line)
+    
+    if not key_exists:
+        lines.append(f"ROBYNN_API_KEY={api_key}")
+    
+    env_path.write_text("\n".join(lines) + "\n")
+    print("\n✅ Successfully connected to Robynn AI Pro!")
+    print("🚀 Your CMO Agent now has full access to your Brand Hub context.")
+    print("✨ Remote tools will now use your organization's premium data access.")
+
+def status_command():
+    """Check the connection status and brand details."""
+    api_key = os.environ.get("ROBYNN_API_KEY")
+    if not api_key:
+        print("\nStatus: ⚪ Anonymous (Free Tier)")
+        print("→ Remote tasks are rate-limited and use generic marketing context.")
+        print("→ To unlock your Brand Hub and Pro features, run:")
+        print("  python tools/robynn.py init <your_api_key>")
+        print("\nGet your key at: https://app.robynn.ai/settings/api-keys")
+        return
+
+    print("\nStatus: 🟢 Connected (Pro Tier)")
+    client = RobynnClient(api_key)
+    context = client.fetch_context()
+    
+    if context:
+        print(f"Organization: {context.get('organizationId', 'Loaded')}")
+        print(f"Company:      {context.get('companyName', 'Not Set')}")
+        print(f"Website:      {context.get('companyWebsite', 'Not Set')}")
+        if context.get('voiceAndTone'):
+            print("Brand Voice:  ✅ Synchronized")
+        else:
+            print("Brand Voice:  ⚠️ Not configured in Brand Hub")
+    else:
+        print("⚠️  Connected, but failed to fetch brand context. Check your settings on Robynn AI.")
+
+def usage_command():
+    """Check the current usage and limits."""
+    api_key = os.environ.get("ROBYNN_API_KEY")
+    if not api_key:
+        print("\nTier: ⚪ Anonymous")
+        print("Limit: 5 tasks / day (Per IP)")
+        print("\nSign up at https://app.robynn.ai to increase your limits to 20 tasks / month for free.")
+        return
+
+    client = RobynnClient(api_key)
+    usage = client.fetch_usage()
+    
+    if usage:
+        tier = usage.get("tier", "Unknown")
+        remaining = usage.get("remaining", 0)
+        total = usage.get("total", 0)
+        reset_date = usage.get("resetDate")
+        
+        print(f"\nTier:      {tier}")
+        print(f"Remaining: {remaining} of {total} tasks")
+        if reset_date:
+            print(f"Resets on: {reset_date}")
+        
+        if tier == "Free":
+            print("\nUpgrade to Pro for 500 tasks / day and full Brand Hub access!")
+    else:
+        print("\n⚠️  Failed to fetch usage details. Please try again later.")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python tools/robynn.py <command> [args]")
+        print("Commands: init <key>, status, usage")
+        sys.exit(1)
+        
+    command = sys.argv[1]
+    
+    if command == "init":
+        if len(sys.argv) < 3:
+            print("Usage: python tools/robynn.py init <key>")
+            sys.exit(1)
+        init_command(sys.argv[2])
+    elif command == "status":
+        status_command()
+    elif command == "usage":
+        usage_command()
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
