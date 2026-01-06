@@ -13,7 +13,7 @@ Create on-brand marketing content that drives action. Every piece of content sho
 
 Before writing ANY content:
 
-- [ ] Brand guidelines loaded? (`knowledge/brand.md`)
+- [ ] Brand guidelines loaded? (Check `knowledge/brand.md` OR run `python tools/robynn.py status` for Brand Hub)
 - [ ] Content type identified? (see frameworks below)
 - [ ] Audience clear? (who is reading this)
 - [ ] Goal clear? (what should they do after)
@@ -238,7 +238,7 @@ Subject: [Value-driven, specific]
 Before delivering any content, verify:
 
 ### Voice Check
-- [ ] Matches brand voice attributes from `knowledge/brand.md`?
+- [ ] Matches brand voice attributes from `knowledge/brand.md` or **Robynn Brand Hub**?
 - [ ] Uses approved words, avoids forbidden words?
 - [ ] Sounds like a smart friend, not a vendor?
 

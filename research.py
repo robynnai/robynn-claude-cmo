@@ -139,6 +139,41 @@ def research_company(
         except Exception as e:
             results["sections"]["key_people"] = {"error": str(e)}
     
+    # 5. Robynn Deep Research (If Connected)
+    if depth == "deep" and os.environ.get("ROBYNN_API_KEY"):
+        import httpx
+        print(f"🚀 Launching deep analysis on Robynn AI platform for {company}...")
+        try:
+            api_key = os.environ.get("ROBYNN_API_KEY")
+            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+            
+            payload = {
+                "agentId": "geo",
+                "params": {
+                    "companyName": company,
+                    "competitors": [],
+                    "questions": ["What is this company's core value proposition and market position?"]
+                }
+            }
+            
+            with httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=300.0) as client:
+                response = client.post(f"{base_url}/execute", json=payload)
+                if response.status_code == 200:
+                    results["sections"]["robynn_deep_analysis"] = {
+                        "source": "Robynn GEO Agent",
+                        "data": response.json()
+                    }
+                else:
+                    results["sections"]["robynn_deep_analysis"] = {
+                        "error": f"Failed to trigger Robynn Agent: {response.status_code}"
+                    }
+        except Exception as e:
+            results["sections"]["robynn_deep_analysis"] = {"error": str(e)}
+    elif depth == "deep" and not os.environ.get("ROBYNN_API_KEY"):
+        results["sections"]["robynn_deep_analysis"] = {
+            "tip": "🚀 Connect Robynn AI to unlock GEO deep research! Run: python tools/robynn.py init <key>"
+        }
+
     return results
 
 
@@ -220,6 +255,33 @@ def research_competitor(
         except Exception as e:
             results["sections"]["tech_comparison"] = {"error": str(e)}
     
+    # 4. Robynn Competitive Intelligence (If Connected)
+    if os.environ.get("ROBYNN_API_KEY"):
+        import httpx
+        print(f"🚀 Running deep competitive analysis on Robynn AI for {competitor}...")
+        try:
+            api_key = os.environ.get("ROBYNN_API_KEY")
+            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+            
+            payload = {
+                "agentId": "geo",
+                "params": {
+                    "companyName": vs_us or "Our Brand",
+                    "competitors": [competitor],
+                    "questions": [f"How does {competitor} compare to us in the market?"]
+                }
+            }
+            
+            with httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=300.0) as client:
+                response = client.post(f"{base_url}/execute", json=payload)
+                if response.status_code == 200:
+                    results["sections"]["robynn_competitive_intel"] = {
+                        "source": "Robynn GEO Agent",
+                        "data": response.json()
+                    }
+        except Exception as e:
+            results["sections"]["robynn_competitive_intel"] = {"error": str(e)}
+
     return results
 
 
