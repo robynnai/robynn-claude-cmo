@@ -1,6 +1,6 @@
-# Robynn CMO Agent
+# Rory — Your CMO in the Terminal
 
-AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your marketing strategy, research, and content creation to a remote-first expert agent.
+Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
 
 ## Installation
 
@@ -10,8 +10,8 @@ AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your mark
 # Add the Robynn marketplace
 /plugin marketplace add robynnai/robynn-claude-cmo
 
-# Install the plugin
-/plugin install robynn-cmo@robynn-plugins
+# Install Rory
+/plugin install rory@robynn-plugins
 ```
 
 ### Option 2: Install as User Skill (Personal)
@@ -21,7 +21,7 @@ AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your mark
 git clone https://github.com/robynnai/robynn-claude-cmo.git
 
 # Copy to Claude Code skills directory
-cp -r robynn-claude-cmo ~/.claude/skills/robynn-cmo
+cp -r robynn-claude-cmo ~/.claude/skills/rory
 ```
 
 ## Setup
@@ -40,7 +40,7 @@ cp -r robynn-claude-cmo ~/.claude/skills/robynn-cmo
 
 3. **Verify connection:**
    ```bash
-   python tools/robynn.py status
+   rory status
    ```
 
 ## Features (Free & Pro)
@@ -69,17 +69,17 @@ Once installed, just ask Claude:
 
 ## How It Works
 
-The Robynn CMO Agent uses a **"Thin Client"** architecture. While the local plugin provides the interface, the complex reasoning, system prompts, and tool integrations (Apollo, Clearbit, Firecrawl, etc.) are handled by Robynn's remote infrastructure.
+Rory uses a **"Thin Client"** architecture. While the local plugin provides the interface, the complex reasoning, system prompts, and tool integrations (Apollo, Clearbit, Firecrawl, etc.) are handled by Robynn's remote infrastructure.
 
 - **Free Tier**: Anonymous, rate-limited access with generic marketing context.
-- **Pro Tier**: Connect your Robynn account (`python tools/robynn.py init <key>`) to unlock your **Brand Hub** context, ensuring every response follows your specific brand voice and strategy.
+- **Pro Tier**: Connect your Robynn account (`rory config <key>`) to unlock your **Brand Hub** context, ensuring every response follows your specific brand voice and strategy.
 
 ## Project Structure
 
 ```
-robynn-claude-cmo/
+robynn-rory/
 ├── skills/                   # Claude Code skills (Thin Client)
-│   ├── cmo/SKILL.md         # Main CMO orchestrator
+│   ├── cmo/SKILL.md         # Main Rory orchestrator
 │   ├── content/SKILL.md     # Content creation redirect
 │   ├── research/SKILL.md    # Research redirect
 │   └── ads/SKILL.md         # Advertising redirect

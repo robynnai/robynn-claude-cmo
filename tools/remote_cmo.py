@@ -82,13 +82,13 @@ class RemoteCMO:
 def main():
     """CLI entry point for remote execution."""
     if len(sys.argv) < 2:
-        print("Usage: python tools/remote_cmo.py \"your query\"")
+        print("Usage: rory \"your query\"")
         sys.exit(1)
         
     query = sys.argv[1]
     cmo = RemoteCMO()
     
-    print(f"\n[Robynn] Thinking about: {query[:50]}...")
+    print(f"\n⠋ Rory is thinking about: {query[:50]}...")
     
     for event in cmo.stream_query(query):
         etype = event.get("type")
@@ -111,6 +111,8 @@ def main():
                 total = usage.get("total")
                 if remaining is not None and total is not None:
                     print(f"✓ {remaining} of {total} tasks remaining this month.")
+            
+            print("✓ Task complete. Sounds like you.")
             print()
         elif etype == "error":
             print(f"\n❌ Error: {msg}")

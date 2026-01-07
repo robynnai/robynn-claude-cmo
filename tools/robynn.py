@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import httpx
+import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -71,16 +72,38 @@ class RobynnClient:
 # CLI Commands
 # ============================================================================
 
+def print_welcome():
+    """Print the Rory welcome box."""
+    welcome = """
+┌─────────────────────────────────────────────┐
+│                                             │
+│   Hey, I'm Rory — your CMO in the terminal. │
+│                                             │
+│   I'm connected to your Brand Hub in        │
+│   Robynn, so I already know your voice,     │
+│   positioning, and competitors.             │
+│                                             │
+│   Try:                                      │
+│   • rory research "Company Name"            │
+│   • rory write linkedin-post                │
+│   • rory competitors                        │
+│                                             │
+│   Let's make some noise.                    │
+│                                             │
+└─────────────────────────────────────────────┘
+"""
+    print(welcome)
+
 def init_command(api_key: str):
     """Initialize the Robynn connection with an API key."""
-    print(f"Verifying API key with Robynn AI...")
+    print(f"⠋ Rory is verifying your API key with Robynn AI...")
     client = RobynnClient(api_key)
     
     if not client.validate_key(api_key):
         print("\n❌ Invalid API key.")
         print("1. Sign up/Login at https://app.robynn.ai")
         print("2. Go to Settings > API Keys")
-        print("3. Copy your key and try again: python tools/robynn.py init <key>")
+        print("3. Copy your key and try again: rory config <key>")
         sys.exit(1)
     
     # Save to .env file
@@ -101,17 +124,17 @@ def init_command(api_key: str):
     
     env_path.write_text("\n".join(lines) + "\n")
     print("\n✅ Successfully connected to Robynn AI Pro!")
-    print("🚀 Your CMO Agent now has full access to your Brand Hub context.")
-    print("✨ Remote tools will now use your organization's premium data access.")
+    print("🚀 I now have full access to your Brand Hub context.")
+    print("✨ Let's make some noise.")
 
 def status_command():
     """Check the connection status and brand details."""
     api_key = os.environ.get("ROBYNN_API_KEY")
     if not api_key:
         print("\nStatus: ⚪ Anonymous (Free Tier)")
-        print("→ Remote tasks are rate-limited and use generic marketing context.")
+        print("→ I'm running with generic marketing context and rate limits.")
         print("→ To unlock your Brand Hub and Pro features, run:")
-        print("  python tools/robynn.py init <your_api_key>")
+        print("  rory config <your_api_key>")
         print("\nGet your key at: https://app.robynn.ai/settings/api-keys")
         return
 
@@ -128,7 +151,7 @@ def status_command():
         else:
             print("Brand Voice:  ⚠️ Not configured in Brand Hub")
     else:
-        print("⚠️  Connected, but failed to fetch brand context. Check your settings on Robynn AI.")
+        print("⚠️  Connected, but I couldn't fetch your brand context. Check your settings on Robynn AI.")
 
 def usage_command():
     """Check the current usage and limits."""
@@ -156,25 +179,111 @@ def usage_command():
         if tier == "Free":
             print("\nUpgrade to Pro for 500 tasks / day and full Brand Hub access!")
     else:
-        print("\n⚠️  Failed to fetch usage details. Please try again later.")
+        print("\n⚠️  I couldn't fetch your usage details right now. Please try again later.")
+
+def sync_command(json_output=False):
+    """Sync the latest Brand Hub context."""
+    api_key = os.environ.get("ROBYNN_API_KEY")
+    if not api_key:
+        if json_output:
+            print(json.dumps({"success": False, "error": "Not connected"}))
+        else:
+            print("\n❌ You need to connect your Robynn account first.")
+            print("Run: rory config <your_api_key>")
+        return
+
+    if not json_output:
+        print("⠋ Rory is syncing your latest Brand Hub context...")
+    
+    client = RobynnClient(api_key)
+    context = client.fetch_context()
+    
+    if context:
+        # Write to knowledge/brand.md
+        brand_path = Path(__file__).parent.parent / "knowledge" / "brand.md"
+        try:
+            content = f"# Brand Hub Context\n\n"
+            content += f"Company: {context.get('companyName', 'Not Set')}\n"
+            content += f"Website: {context.get('companyWebsite', 'Not Set')}\n\n"
+            
+            if context.get('voiceAndTone'):
+                content += "## Voice and Tone\n"
+                content += f"{context.get('voiceAndTone')}\n\n"
+            
+            if context.get('positioning'):
+                content += "## Positioning\n"
+                content += f"{context.get('positioning')}\n\n"
+
+            brand_path.write_text(content)
+            
+            if json_output:
+                print(json.dumps({"success": True, "message": "Brand Hub synced"}))
+            else:
+                print("✅ Brand Hub synced. I'm up to speed.")
+        except Exception as e:
+            if json_output:
+                print(json.dumps({"success": False, "error": str(e)}))
+            else:
+                print(f"❌ Failed to write brand.md: {e}")
+    else:
+        if json_output:
+            print(json.dumps({"success": False, "error": "Failed to fetch context"}))
+        else:
+            print("❌ Sync failed. Check your connection.")
+
+def voice_command(json_output=False):
+    """Preview brand voice settings."""
+    api_key = os.environ.get("ROBYNN_API_KEY")
+    if not api_key:
+        if json_output:
+            print(json.dumps({"success": False, "error": "Not connected"}))
+        else:
+            print("\nStatus: ⚪ Anonymous (Generic Voice)")
+        return
+
+    client = RobynnClient(api_key)
+    context = client.fetch_context()
+    
+    if context and context.get('voiceAndTone'):
+        if json_output:
+            print(json.dumps({"success": True, "voice": context.get('voiceAndTone')}))
+        else:
+            print("\nVoice Settings:")
+            print(f"Tone: {context.get('voiceAndTone')}")
+            print("Status: ✅ Active")
+    else:
+        if json_output:
+            print(json.dumps({"success": False, "error": "Voice settings not found"}))
+        else:
+            print("\nVoice settings not found in Brand Hub.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python tools/robynn.py <command> [args]")
-        print("Commands: init <key>, status, usage")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("command", nargs="?")
+    parser.add_argument("arg", nargs="?")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args()
+
+    if not args.command:
+        print_welcome()
+        sys.exit(0)
         
-    command = sys.argv[1]
+    command = args.command
+    json_output = args.json
     
-    if command == "init":
-        if len(sys.argv) < 3:
-            print("Usage: python tools/robynn.py init <key>")
+    if command in ["init", "config"]:
+        if not args.arg:
+            print("Usage: rory config <key>")
             sys.exit(1)
-        init_command(sys.argv[2])
+        init_command(args.arg)
     elif command == "status":
         status_command()
     elif command == "usage":
         usage_command()
+    elif command == "sync":
+        sync_command(json_output)
+    elif command == "voice":
+        voice_command(json_output)
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)

@@ -46,11 +46,10 @@ For teams and production use, sync from Robynn Brand Hub:
 
 ```bash
 # First time setup
-robynn login
-robynn sync --brand-id YOUR_BRAND_ID
+rory config <your_api_key>
 
-# Ongoing (keeps knowledge fresh)
-robynn sync --watch
+# Sync latest brand data
+rory sync
 ```
 
 Benefits of Brand Hub sync:
