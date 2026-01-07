@@ -182,7 +182,7 @@ def usage_command():
         print("\n⚠️  I couldn't fetch your usage details right now. Please try again later.")
 
 def sync_command(json_output=False):
-    """Sync the latest Brand Hub context."""
+    """Validate Brand Hub connection (no local storage needed)."""
     api_key = os.environ.get("ROBYNN_API_KEY")
     if not api_key:
         if json_output:
@@ -193,43 +193,36 @@ def sync_command(json_output=False):
         return
 
     if not json_output:
-        print("⠋ Rory is syncing your latest Brand Hub context...")
-    
+        print("⠋ Rory is checking your Brand Hub connection...")
+
     client = RobynnClient(api_key)
     context = client.fetch_context()
-    
-    if context:
-        # Write to knowledge/brand.md
-        brand_path = Path(__file__).parent.parent / "knowledge" / "brand.md"
-        try:
-            content = f"# Brand Hub Context\n\n"
-            content += f"Company: {context.get('companyName', 'Not Set')}\n"
-            content += f"Website: {context.get('companyWebsite', 'Not Set')}\n\n"
-            
-            if context.get('voiceAndTone'):
-                content += "## Voice and Tone\n"
-                content += f"{context.get('voiceAndTone')}\n\n"
-            
-            if context.get('positioning'):
-                content += "## Positioning\n"
-                content += f"{context.get('positioning')}\n\n"
 
-            brand_path.write_text(content)
-            
-            if json_output:
-                print(json.dumps({"success": True, "message": "Brand Hub synced"}))
-            else:
-                print("✅ Brand Hub synced. I'm up to speed.")
-        except Exception as e:
-            if json_output:
-                print(json.dumps({"success": False, "error": str(e)}))
-            else:
-                print(f"❌ Failed to write brand.md: {e}")
+    if context:
+        company = context.get('companyName', 'Not Set')
+        features = context.get('features', [])
+        voice = context.get('voiceAndTone')
+
+        if json_output:
+            print(json.dumps({
+                "success": True,
+                "company": company,
+                "features_count": len(features) if isinstance(features, list) else 0,
+                "voice_configured": bool(voice)
+            }))
+        else:
+            print(f"\n✅ Brand Hub connected")
+            print(f"   Company: {company}")
+            print(f"   Features: {len(features) if isinstance(features, list) else 0} loaded")
+            print(f"   Voice: {'✅ Configured' if voice else '⚠️ Not configured'}")
+            print(f"\n💡 Your brand context is fetched automatically on each request.")
+            print(f"   No local files needed. Changes in Brand Hub reflect immediately.")
     else:
         if json_output:
             print(json.dumps({"success": False, "error": "Failed to fetch context"}))
         else:
-            print("❌ Sync failed. Check your connection.")
+            print("\n⚠️ Brand Hub not configured.")
+            print("   Visit Settings → Brand Hub in Robynn to add your company info.")
 
 def voice_command(json_output=False):
     """Preview brand voice settings."""
