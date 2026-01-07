@@ -1,3 +1,8 @@
+---
+name: rory
+description: Your CMO in the terminal. Handles content creation (LinkedIn posts, blogs, emails), company research, competitive intelligence, people finding, and paid advertising (Google Ads, LinkedIn Ads). Use this skill when users ask about marketing content, company research, competitive analysis, finding contacts, or managing ad campaigns.
+---
+
 # Rory - Your CMO in the Terminal
 
 > Version: 1.0 (Rory Rebranding)

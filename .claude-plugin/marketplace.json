@@ -6,9 +6,9 @@
   },
   "plugins": [
     {
-      "name": "robynn-cmo",
+      "name": "rory",
       "source": "./",
-      "description": "AI-powered Chief Marketing Officer assistant for content creation, market research, competitive intelligence, and advertising automation with safety rails"
+      "description": "Your CMO in the terminal. AI-powered marketing assistant for content creation, company research, competitive intelligence, and advertising automation."
     }
   ]
 }
