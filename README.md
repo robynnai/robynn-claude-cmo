@@ -2,9 +2,38 @@
 
 Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
 
-## Installation
+## Quick Install
 
-### Option 1: Install as Claude Code Plugin (Recommended)
+```bash
+curl -fsSL https://raw.githubusercontent.com/robynnai/robynn-claude-cmo/main/install.sh | bash
+```
+
+Then configure your API key:
+```bash
+cd ~/.claude/skills/rory
+# Edit .env and add your ROBYNN_API_KEY
+# Get your key at https://robynn.ai/settings/api-keys
+```
+
+## Alternative Installation Methods
+
+### Option 1: Manual Clone
+
+```bash
+# Clone the repo
+git clone https://github.com/robynnai/robynn-claude-cmo.git ~/.claude/skills/rory
+
+# Install dependencies
+cd ~/.claude/skills/rory
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Configure
+cp .env.example .env
+# Edit .env and add your ROBYNN_API_KEY
+```
+
+### Option 2: Claude Code Plugin Marketplace (Coming Soon)
 
 ```bash
 # Add the Robynn marketplace
@@ -14,34 +43,12 @@ Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Co
 /plugin install rory@robynn-plugins
 ```
 
-### Option 2: Install as User Skill (Personal)
+## Verify Installation
 
 ```bash
-# Clone the repo
-git clone https://github.com/robynnai/robynn-claude-cmo.git
-
-# Copy to Claude Code skills directory
-cp -r robynn-claude-cmo ~/.claude/skills/rory
+cd ~/.claude/skills/rory
+.venv/bin/python tools/robynn.py status
 ```
-
-## Setup
-
-1. **Install Python dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Configure Robynn API Key:**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your ROBYNN_API_KEY
-   # Get your key at https://robynn.ai/settings/api-keys
-   ```
-
-3. **Verify connection:**
-   ```bash
-   rory status
-   ```
 
 ## Features (Free & Pro)
 
