@@ -1,83 +1,55 @@
-# Knowledge Layer
+# Knowledge Layer — Remote-First
 
-This folder contains the brand and company context that powers consistent marketing output.
+> **Local files are not used.** All brand context comes from your Robynn Brand Hub.
 
-## Available Knowledge Files
+## How It Works
 
-| File | Purpose | When to Load |
-|------|---------|--------------|
-| `brand.md` | Voice, tone, messaging pillars | **Always** before content tasks |
-| `products.md` | Product features, pricing, use cases | When writing about product |
-| `competitors.md` | Competitive landscape | For comparisons, positioning |
-| `personas.md` | ICP and buyer personas | For targeted messaging |
+Rory uses a **thin-client architecture**:
 
-## Loading Rules
+1. You configure your brand in the **Robynn Brand Hub** (web app)
+2. When you use Rory, your request goes to the Robynn API
+3. The CMO v2 agent automatically loads YOUR brand context
+4. Results come back already on-brand
 
-### Always Load First
-- `brand.md` — This is non-negotiable for any content creation
+**No local files. No syncing. No stale data.**
 
-### Load On Demand
-- `products.md` — Only when discussing specific features/pricing
-- `competitors.md` — Only for competitive positioning tasks
-- `personas.md` — Only when targeting specific segments
+## What's Stored in Brand Hub
 
-### Never Load Everything
-Loading all files wastes context window. Be surgical.
+| Category | What It Includes |
+|----------|------------------|
+| **Company Profile** | Name, description, website, tagline |
+| **Product Knowledge** | Features, differentiators, FAQs |
+| **Brand Voice** | Tone, style, personality traits |
+| **Terminology** | Preferred words, avoided words, branded terms |
+| **Visual Identity** | Colors, logo, design style |
+| **Personas** | Target audience segments |
 
-## How to Apply Brand Context
+## Setup
 
-After reading `brand.md`, ensure every piece of content:
+1. Go to https://robynn.ai
+2. Navigate to **Settings → Brand Hub**
+3. Fill in your brand details
+4. Get your API key from **Settings → API Keys**
+5. Configure Rory: `rory config <your_api_key>`
 
-1. **Matches the voice** — Check the Voice & Tone section
-2. **Uses approved language** — Check Words We Use / Don't Use
-3. **Hits key messages** — Incorporate messaging pillars naturally
-4. **Speaks to the persona** — Match their pain points and language
+## Verify
 
-## Updating Knowledge
+Run `rory status` to confirm your Brand Hub is connected.
 
-### Manual Updates (Free)
-Edit the markdown files directly. Best for:
-- Quick tweaks
-- Testing new messaging
-- Personal/side projects
+## Why Remote-First?
 
-### Robynn Brand Hub Sync (Pro)
-For teams and production use, sync from Robynn Brand Hub:
+| Local Files | Remote Brand Hub |
+|-------------|------------------|
+| ❌ Can become stale | ✅ Always up-to-date |
+| ❌ Manual syncing required | ✅ Automatic on each request |
+| ❌ Different on each machine | ✅ Same everywhere |
+| ❌ No version history | ✅ Full audit trail |
 
-```bash
-# First time setup
-rory config <your_api_key>
+## About This Folder
 
-# Sync latest brand data
-rory sync
-```
+The `knowledge/` folder exists for documentation purposes only. The files here explain how the remote-first architecture works — they are not read by Rory for brand context.
 
-Benefits of Brand Hub sync:
-- ✅ Always up-to-date with latest brand guidelines
-- ✅ Competitor intel refreshed weekly
-- ✅ Shared across team members
-- ✅ Version history and rollback
+## Need Help?
 
-→ Get started: https://robynn.ai/brand-hub
-
-## File Format
-
-All knowledge files use this structure:
-
-```markdown
-# [Topic Name]
-
-## Overview
-Brief description of what this covers
-
-## [Section 1]
-Content...
-
-## [Section 2]
-Content...
-
-## Quick Reference
-Key points in table or bullet format
-```
-
-Keep files focused and scannable. Claude works best with clear structure.
+- Brand Hub setup: https://robynn.ai/docs/brand-hub
+- Support: support@robynn.ai

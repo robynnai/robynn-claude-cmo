@@ -238,7 +238,7 @@ Subject: [Value-driven, specific]
 Before delivering any content, verify:
 
 ### Voice Check
-- [ ] Matches brand voice attributes from `knowledge/brand.md` or **Robynn Brand Hub**?
+- [ ] Matches brand voice attributes from your **Robynn Brand Hub**?
 - [ ] Uses approved words, avoids forbidden words?
 - [ ] Sounds like a smart friend, not a vendor?
 
