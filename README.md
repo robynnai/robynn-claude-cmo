@@ -35,7 +35,7 @@ cp -r robynn-claude-cmo ~/.claude/skills/rory
    ```bash
    cp .env.example .env
    # Edit .env and add your ROBYNN_API_KEY
-   # Get your key at https://app.robynn.ai/settings/api-keys
+   # Get your key at https://robynn.ai/settings/api-keys
    ```
 
 3. **Verify connection:**

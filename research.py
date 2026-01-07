@@ -145,7 +145,7 @@ def research_company(
         print(f"🚀 Launching deep analysis on Robynn AI platform for {company}...")
         try:
             api_key = os.environ.get("ROBYNN_API_KEY")
-            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
             
             payload = {
                 "agentId": "geo",
@@ -261,7 +261,7 @@ def research_competitor(
         print(f"🚀 Running deep competitive analysis on Robynn AI for {competitor}...")
         try:
             api_key = os.environ.get("ROBYNN_API_KEY")
-            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
             
             payload = {
                 "agentId": "geo",

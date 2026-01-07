@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 # Configuration & Constants
 # ============================================================================
 
-ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://app.robynn.ai/api/cli")
+ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
 ENV_FILE_NAME = ".env"
 
 # ============================================================================
@@ -101,7 +101,7 @@ def init_command(api_key: str):
     
     if not client.validate_key(api_key):
         print("\n❌ Invalid API key.")
-        print("1. Sign up/Login at https://app.robynn.ai")
+        print("1. Sign up/Login at https://robynn.ai")
         print("2. Go to Settings > API Keys")
         print("3. Copy your key and try again: rory config <key>")
         sys.exit(1)
@@ -135,7 +135,7 @@ def status_command():
         print("→ I'm running with generic marketing context and rate limits.")
         print("→ To unlock your Brand Hub and Pro features, run:")
         print("  rory config <your_api_key>")
-        print("\nGet your key at: https://app.robynn.ai/settings/api-keys")
+        print("\nGet your key at: https://robynn.ai/settings/api-keys")
         return
 
     print("\nStatus: 🟢 Connected (Pro Tier)")
@@ -159,7 +159,7 @@ def usage_command():
     if not api_key:
         print("\nTier: ⚪ Anonymous")
         print("Limit: 5 tasks / day (Per IP)")
-        print("\nSign up at https://app.robynn.ai to increase your limits to 20 tasks / month for free.")
+        print("\nSign up at https://robynn.ai to increase your limits to 20 tasks / month for free.")
         return
 
     client = RobynnClient(api_key)
