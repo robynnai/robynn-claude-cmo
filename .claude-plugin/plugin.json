@@ -22,6 +22,9 @@
   ],
   "skills": "./",
   "postInstall": "./install.sh",
+  "hooks": {
+    "postInstall": "./install.sh"
+  },
   "requires": {
     "python": ">=3.9"
   }

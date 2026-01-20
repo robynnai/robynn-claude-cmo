@@ -95,20 +95,30 @@ def main():
         subprocess.run(script_args)
 
     elif cmd in ["help", "--help", "-h"]:
-        print("Rory — Your CMO in the Terminal\n")
-        print("Usage: rory <command> [args]\n")
-        print("Commands:")
-        print("  research <company>   Research a company")
-        print("  competitors <name>   Analyze competitors")
-        print("  write <type>         Create marketing content (linkedin, tweet, email, blog)")
-        print("  brief --for <type>   Create a marketing brief")
-        print("  status               Check connection status")
-        print("  usage                Check task usage")
-        print("  config <key>         Connect your Robynn account")
-        print("  sync                 Sync Brand Hub context")
-        print("  voice                Preview brand voice settings")
-        print("\nOptions:")
-        print("  --json               Output in JSON format")
+        try:
+            import help_display
+            help_display.display_help()
+        except ImportError:
+            # Fallback if rich is not installed yet
+            from tools import help_display
+            help_display.display_help()
+        except Exception:
+            # Final fallback
+            print("Rory — Your CMO in the Terminal\n")
+            print("Usage: rory <command> [args]\n")
+            print("Commands:")
+            print("  research <company>   Research a company")
+            print("  competitors <name>   Analyze competitors")
+            print("  write <type>         Create marketing content (linkedin, tweet, email, blog)")
+            print("  brief --for <type>   Create a marketing brief")
+            print("  status               Check connection status")
+            print("  usage                Check task usage")
+            print("  config <key>         Connect your Robynn account")
+            print("  sync                 Sync Brand Hub context")
+            print("  voice                Preview brand voice settings")
+            print("\nOptions:")
+            print("  --json               Output in JSON format")
+            print("\nTip: Install 'rich' for a better help experience: pip install rich")
     
     else:
         # Default to remote_cmo.py for everything else

@@ -94,11 +94,7 @@ Just ask Claude:
 
 ## Commands
 
-| Command | What it does |
-|---------|--------------|
-| `rory config <key>` | Connect to your Robynn workspace |
-| `rory status` | Check connection and Brand Hub |
-| `rory usage` | See usage stats |
+Run `python rory.py --help` to see all commands and setup instructions with full branding.
 
 ## Alternative Installation
 

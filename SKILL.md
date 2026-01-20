@@ -38,25 +38,29 @@ That's it. Your brand context is fetched automatically on each request.
 
 ## Task Routing
 
-| User Says | Task Type | How It Works |
-|-----------|-----------|--------------|
-| "write", "create", "draft" + content type | Content Creation | → Remote CMO with your Brand Hub context |
-| "linkedin", "post", "tweet", "blog", "email" | Content Creation | → Remote CMO with your Brand Hub context |
-| "research [company]", "tell me about [company]" | Company Research | → Remote CMO with research tools |
-| "competitive", "competitor", "vs", "compare" | Competitive Intel | → Remote CMO with competitive tools |
-| "find people", "contacts", "who works at" | People Research | → Remote CMO with Apollo/Proxycurl |
-| "market", "industry", "trends" | Market Research | → Remote CMO with market tools |
-| "ads", "campaign", "google ads", "linkedin ads" | Paid Advertising | → Remote CMO with ads tools |
-| "status" | Status | → Check Robynn connection |
-| "help", "what can you do" | Help | → Show capabilities |
+| User Says | Task Type | Action |
+|-----------|-----------|--------|
+| "write", "create", "draft", "linkedin", "post", "tweet", "blog", "email" | Content | → Remote CMO |
+| "research", "tell me about", "competitive", "vs", "compare" | Research | → Remote CMO |
+| "find people", "contacts", "who works at" | People | → Remote CMO |
+| "ads", "campaign", "google ads", "linkedin ads" | Ads | → Remote CMO |
+| "status", "usage", "sync" | System | → Run `./bin/rory [command]` |
+| "help", "what can you do", "--help" | Help | → **MANDATORY**: Run `./bin/rory help` and display output |
+
+## Help & Documentation
+
+When the user asks for help, "what can you do", or uses the `--help` flag:
+1. **MANDATORY**: You MUST run `./bin/rory help` to show the brand-accurate ASCII art and setup steps.
+2. DO NOT summarize this file or provide your own help text.
+3. Show the output from the tool exactly as it appears.
 
 ## Executing Tasks
 
-For ALL marketing tasks, use the remote CMO:
+For ALL marketing tasks, use the Rory wrapper:
 
 ```bash
-# The remote_cmo.py handles all requests
-python tools/remote_cmo.py "your request here"
+# The bin/rory wrapper handles virtualenvs and routing
+./bin/rory "your request here"
 ```
 
 Or simply tell me what you need and I'll route it through the API automatically.
@@ -79,7 +83,7 @@ Structure every response with:
 Confirm what you understood they want.
 
 ### 2. Execute via Remote CMO
-Send the request to `tools/remote_cmo.py` which calls the Robynn API.
+Send the request to `./bin/rory` which calls the Robynn API.
 The API already has your brand context loaded.
 
 ### 3. Deliver Results
@@ -107,26 +111,6 @@ If Brand Hub shows "Not configured", visit Settings → Brand Hub in Robynn to a
 - Brand voice and tone
 - Color palette and visual identity
 
-## Available Capabilities
-
-### Content Creation
-- LinkedIn posts, tweets, blog outlines
-- Cold emails, one-pagers
-- All content uses YOUR voice from Brand Hub
-
-### Research
-- Company deep-dives (Clearbit, Firecrawl, Apollo)
-- Competitive intelligence (G2, Capterra)
-- People finding (Apollo, Proxycurl)
-- Market research (Reddit, web search)
-- Tech stack detection (BuiltWith)
-
-### Ads Management
-- Google Ads: campaigns, ad groups, keywords, performance
-- LinkedIn Ads: B2B campaigns, targeting, analytics
-- All campaigns created in DRAFT mode (never auto-activated)
-- Budget limits and confirmation required
-
 ## Quality Standards
 
 The CMO v2 agent automatically ensures:
@@ -150,15 +134,6 @@ If your Brand Hub is missing information, the agent will tell you what to add.
 
 **If request is unclear:**
 "Quick clarification: [ONE specific question]?"
-
-## Commands Reference
-
-| Command | What it does |
-|---------|--------------|
-| `rory config <key>` | Connect to your Robynn workspace |
-| `rory status` | Check connection and usage |
-| `rory usage` | See detailed usage stats |
-| `rory "request"` | Execute any marketing task |
 
 ## Pricing Tiers
 

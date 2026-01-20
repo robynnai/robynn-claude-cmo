@@ -33,6 +33,7 @@ robynn-rory/
 
 | Command | What it does |
 |---------|--------------|
+| `rory help`   | Show this help screen with ASCII art branding |
 | `rory status` | Show what context is currently loaded |
 | `rory config` | Connect to your Robynn workspace |
 | `rory sync`   | Pull latest Brand Hub updates |
