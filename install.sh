@@ -240,18 +240,8 @@ if [ -n "$API_KEY" ]; then
     echo -e "  rory help                      ${GREEN}# See all commands${NC}"
     echo -e "  rory write linkedin-post       ${GREEN}# Create content${NC}"
 else
-    # API key was skipped
-    echo -e "${YELLOW}Setup incomplete - no API key provided${NC}"
-    echo ""
-    echo -e "${BLUE}To finish setup, run:${NC}"
-    echo -e "  ${YELLOW}rory init${NC}"
-    echo ""
-    echo -e "This will:"
-    echo -e "  1. Open your browser to get an API key"
-    echo -e "  2. Validate and save the key"
-    echo -e "  3. Connect you to your Brand Hub"
+    # API key was skipped - simple next steps
+    echo -e "${BLUE}Next steps:${NC}"
+    echo -e "  1. Get your API key at: ${YELLOW}https://robynn.ai/settings/api-keys${NC}"
+    echo -e "  2. In Claude, run: ${YELLOW}rory init <your_api_key>${NC}"
 fi
-
-echo ""
-echo -e "${BLUE}Documentation:${NC} ${YELLOW}https://robynn.ai/docs/rory${NC}"
-echo -e "${BLUE}Get API key:${NC}   ${YELLOW}https://robynn.ai/settings/api-keys${NC}"
