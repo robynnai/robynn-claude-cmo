@@ -6,16 +6,16 @@ from rich.table import Table
 def display_help():
     console = Console()
 
-    # ASCII Art - use plain print to avoid Rich formatting issues in some terminals
+    # Big bold ASCII Art - blocky letters for maximum impact
     print("""
- ____   ___  ____  _   _ 
-|  _ \\ / _ \\|  _ \\| | | |
-| |_) | | | | |_) | |_| |
-|  _ <| |_| |  _ < \\__, |
-|_| \\_\\\\___/|_| \\_\\  /_/ 
+ RRRRRR    OOOO   RRRRRR   YY   YY
+ RR   RR  OO  OO  RR   RR   YY YY
+ RRRRRR   OO  OO  RRRRRR     YYY
+ RR  RR   OO  OO  RR  RR     YYY
+ RR   RR   OOOO   RR   RR    YYY
 
-    Your CMO in the Terminal
-      powered by Robynn AI
+        Your CMO in the Terminal
+          powered by Robynn AI
 """)
 
     # Quick Start Section
