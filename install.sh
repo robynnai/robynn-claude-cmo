@@ -215,13 +215,28 @@ else
 fi
 
 # ============================================================================
-# Success Message
+# Success Message with ASCII Art
 # ============================================================================
 
+# Define cream/beige color for the ASCII art (matches screenshot)
+CREAM='\033[38;5;229m'
+
 echo ""
-echo -e "${GREEN}┌─────────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${GREEN}│                    Installation complete!                       │${NC}"
-echo -e "${GREEN}└─────────────────────────────────────────────────────────────────┘${NC}"
+echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
+echo -e "${CREAM}│                                                                             │${NC}"
+echo -e "${CREAM}│                    ██████╗  ██████╗ ██████╗ ██╗   ██╗                       │${NC}"
+echo -e "${CREAM}│                    ██╔══██╗██╔═══██╗██╔══██╗╚██╗ ██╔╝                       │${NC}"
+echo -e "${CREAM}│                    ██████╔╝██║   ██║██████╔╝ ╚████╔╝                        │${NC}"
+echo -e "${CREAM}│                    ██╔══██╗██║   ██║██╔══██╗  ╚██╔╝                         │${NC}"
+echo -e "${CREAM}│                    ██║  ██║╚██████╔╝██║  ██║   ██║                          │${NC}"
+echo -e "${CREAM}│                    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝                          │${NC}"
+echo -e "${CREAM}│                                                                             │${NC}"
+echo -e "${CREAM}│                         Your CMO in the Terminal                            │${NC}"
+echo -e "${CREAM}│                           Powered by Robynn AI                              │${NC}"
+echo -e "${CREAM}│                                                                             │${NC}"
+echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
+echo ""
+echo -e "${GREEN}Installation complete!${NC}"
 echo ""
 
 if [ -n "$API_KEY" ]; then
