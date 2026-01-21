@@ -6,24 +6,17 @@ from rich.table import Table
 def display_help():
     console = Console()
 
-    # ASCII Art
-    ascii_art = """
- ██████╗    ██████╗   ██████╗   ██╗   ██╗
- ██╔══██╗  ██╔═══██╗  ██╔══██╗  ╚██╗ ██╔╝
- ██████╔╝  ██║   ██║  ██████╔╝   ╚████╔╝
- ██╔══██╗  ██║   ██║  ██╔══██╗    ╚██╔╝
- ██║  ██║  ╚██████╔╝  ██║  ██║     ██║
- ╚═╝  ╚═╝   ╚═════╝   ╚═╝  ╚═╝     ╚═╝
-"""
-    
-    # Header with ASCII Art and Tagline
-    console.print(ascii_art, style="bold white", justify="center")
-    
-    tagline = Text("Your CMO in the Terminal\n", style="dim", justify="center")
-    tagline.append("powered by ", style="dim")
-    tagline.append("Robynn AI", style="bold #D2600F")
-    console.print(tagline, justify="center")
-    console.print()
+    # ASCII Art - use plain print to avoid Rich formatting issues in some terminals
+    print("""
+ ____   ___  ____  _   _ 
+|  _ \\ / _ \\|  _ \\| | | |
+| |_) | | | | |_) | |_| |
+|  _ <| |_| |  _ < \\__, |
+|_| \\_\\\\___/|_| \\_\\  /_/ 
+
+    Your CMO in the Terminal
+      powered by Robynn AI
+""")
 
     # Quick Start Section
     console.print("[bold cyan]QUICK START[/bold cyan]")
