@@ -1,54 +1,71 @@
 # Rory — Your CMO in the Terminal
 
-Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Code. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
+Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Code and Claude Desktop. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
 
 ## Quick Start
 
-### 1. Sign Up for Robynn
-Go to https://robynn.ai and create an account. You get **20 free tasks per month**.
-
-### 2. Configure Your Brand Hub
-Navigate to **Settings → Brand Hub** and add:
-- Company name and description
-- Product features and differentiators
-- Brand voice and tone
-- Color palette
-
-### 3. Get Your API Key
-Go to **Settings → API Keys** and generate a key.
-
-### 4. Install the Plugin
+### 1. Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/robynnai/robynn-claude-cmo/main/install.sh | bash
 ```
 
-### 5. Configure Rory
+The installer will:
+- Set up the plugin in `~/.claude/skills/rory`
+- Prompt for your API key
+- Configure both Claude Code and Claude Desktop automatically
 
+### 2. Get Your API Key
+
+Go to https://robynn.ai/settings/api-keys and generate a key.
+(Sign up first if you don't have an account — **20 free tasks/month**)
+
+### 3. Configure Rory
+
+**Option A: Direct setup (works everywhere)**
 ```bash
-cd ~/.claude/skills/rory
-echo "ROBYNN_API_KEY=your_key_here" >> .env
+rory init <your_api_key>
 ```
 
-### 6. Verify
+**Option B: Interactive wizard (terminal only)**
+```bash
+rory init
+```
+Opens browser → guides you through signup → saves your key
+
+**Option C: Manual configuration**
+```bash
+rory config <your_api_key>
+```
+
+### 4. Verify
 
 ```bash
-.venv/bin/python tools/robynn.py status
+rory status
 ```
 
 You should see:
 ```
-✅ Brand Hub connected
-   Company: Your Company
-   Features: X loaded
-   Voice: ✅ Configured
+Status: 🟢 Connected (Pro Tier)
+Organization: your-org-id
+Company:      Your Company
+Brand Voice:  ✅ Configured
+Features:     5 loaded
 ```
+
+### 5. Configure Your Brand Hub
+
+For best results, visit https://robynn.ai/dashboard and configure:
+- **Brand Book** → Company name, tagline, elevator pitch
+- **Strategy & Messaging** → Target audience, pain points
+- **Knowledge Base** → Product features, differentiators
+- **Aesthetics** → Colors, logo, design style
 
 ## How It Works
 
 Rory uses a **remote-first thin-client architecture**:
 
-1. **You configure your brand** in the Robynn web app (Brand Hub)
+1. **You run `rory init`** to connect your Robynn account
 2. **You ask Rory** to create content, do research, or manage ads
 3. **Rory sends your request** to the Robynn CMO v2 agent
 4. **The agent fetches YOUR brand context** automatically
@@ -94,11 +111,40 @@ Just ask Claude:
 
 ## Commands
 
-| Command | What it does |
-|---------|--------------|
-| `rory config <key>` | Connect to your Robynn workspace |
-| `rory status` | Check connection and Brand Hub |
-| `rory usage` | See usage stats |
+Run `rory help` to see all commands with examples.
+
+### Account & Setup
+| Command | Description |
+|---------|-------------|
+| `rory init` | Interactive setup wizard (opens browser) |
+| `rory init <api_key>` | Direct setup with API key |
+| `rory config <api_key>` | Save API key (alias for init) |
+| `rory logout` | Remove saved API key |
+| `rory uninstall` | Remove the Rory plugin |
+
+### Status & Info
+| Command | Description |
+|---------|-------------|
+| `rory status` | Check connection and brand hub status |
+| `rory status --debug` | Show raw API response for debugging |
+| `rory usage` | View remaining tasks and tier info |
+| `rory sync` | Verify Brand Hub connection |
+| `rory voice` | Preview brand voice settings |
+
+### Content & Research
+| Command | Description |
+|---------|-------------|
+| `rory write <type> [topic]` | Create content (linkedin-post, tweet, email, blog-outline) |
+| `rory brief --for <topic>` | Generate a marketing brief |
+| `rory research <company>` | Deep-dive company research |
+| `rory competitors <company>` | Competitive intelligence |
+| `rory "<any request>"` | Free-form natural language query |
+
+## Uninstall
+
+```bash
+rory uninstall
+```
 
 ## Alternative Installation
 
@@ -111,6 +157,53 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 cp .env.example .env
 # Edit .env and add your ROBYNN_API_KEY
+```
+
+## Claude Desktop (MCP) Setup
+
+The install script automatically configures Claude Desktop. Just run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/robynnai/robynn-claude-cmo/main/install.sh | bash
+```
+
+Then restart Claude Desktop.
+
+### Manual Configuration
+
+If you need to configure manually, edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "rory": {
+      "command": "/Users/YOUR_USERNAME/.claude/skills/rory/.venv/bin/python",
+      "args": ["/Users/YOUR_USERNAME/.claude/skills/rory/mcp_server.py"],
+      "env": {
+        "ROBYNN_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `rory_query` | General marketing requests |
+| `rory_research_company` | Company research |
+| `rory_research_competitors` | Competitive analysis |
+| `rory_write_content` | Content creation |
+| `rory_status` | Check connection status |
+| `rory_usage` | Check task quota |
+
+### Example Prompts
+
+```
+"Use Rory to write a LinkedIn post about our new feature"
+"Ask Rory to research Stripe's marketing strategy"
+"Check my Rory usage"
 ```
 
 ## License

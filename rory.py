@@ -25,10 +25,26 @@ def main():
 
     cmd = args.command.lower()
 
-    if cmd in ["config", "init", "status", "usage", "sync", "voice"]:
+    if cmd in ["config", "status", "usage", "sync", "voice"]:
         # Route to robynn.py
         script_args = [sys.executable, "tools/robynn.py", cmd] + unknown
         subprocess.run(script_args)
+    
+    elif cmd in ["init", "login"]:
+        # Onboarding wizard (login is an alias)
+        from tools.onboarding import interactive_init
+        domain = unknown[0] if unknown else None
+        interactive_init(domain)
+    
+    elif cmd == "logout":
+        # Logout command
+        from tools.onboarding import logout
+        logout()
+    
+    elif cmd == "uninstall":
+        # Uninstall command
+        from tools.onboarding import uninstall
+        uninstall()
     
     elif cmd == "research":
         # Route to research.py company
@@ -95,20 +111,34 @@ def main():
         subprocess.run(script_args)
 
     elif cmd in ["help", "--help", "-h"]:
-        print("Rory — Your CMO in the Terminal\n")
-        print("Usage: rory <command> [args]\n")
-        print("Commands:")
-        print("  research <company>   Research a company")
-        print("  competitors <name>   Analyze competitors")
-        print("  write <type>         Create marketing content (linkedin, tweet, email, blog)")
-        print("  brief --for <type>   Create a marketing brief")
-        print("  status               Check connection status")
-        print("  usage                Check task usage")
-        print("  config <key>         Connect your Robynn account")
-        print("  sync                 Sync Brand Hub context")
-        print("  voice                Preview brand voice settings")
-        print("\nOptions:")
-        print("  --json               Output in JSON format")
+        try:
+            import help_display
+            help_display.display_help()
+        except ImportError:
+            # Fallback if rich is not installed yet
+            from tools import help_display
+            help_display.display_help()
+        except Exception:
+            # Final fallback
+            print("Rory — Your CMO in the Terminal\n")
+            print("Usage: rory <command> [args]\n")
+            print("Commands:")
+            print("  research <company>   Research a company")
+            print("  competitors <name>   Analyze competitors")
+            print("  write <type>         Create marketing content (linkedin, tweet, email, blog)")
+            print("  brief --for <type>   Create a marketing brief")
+            print("  status               Check connection status")
+            print("  usage                Check task usage")
+            print("  init                 Connect your account (interactive)")
+            print("  login                Alias for init")
+            print("  config <key>         Connect your account (manual)")
+            print("  logout               Remove your account credentials")
+            print("  uninstall            Remove the Rory plugin")
+            print("  sync                 Sync Brand Hub context")
+            print("  voice                Preview brand voice settings")
+            print("\nOptions:")
+            print("  --json               Output in JSON format")
+            print("\nTip: Install 'rich' for a better help experience: pip install rich")
     
     else:
         # Default to remote_cmo.py for everything else

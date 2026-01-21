@@ -18,6 +18,12 @@ pydantic>=2.0.0
 # YAML Config Parsing - for ads_config.yaml
 pyyaml>=6.0.0
 
+# Terminal Styling - for help and status
+rich>=13.0.0
+
+# MCP Server
+fastmcp>=2.0.0
+
 # ============================================================================
 # Ads Platform SDKs (Optional - install for ads functionality)
 # ============================================================================
