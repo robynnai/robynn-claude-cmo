@@ -6,14 +6,13 @@ from rich.table import Table
 def display_help():
     console = Console()
 
-    # ASCII Art
-    ascii_art = """
- ██████╗    ██████╗   ██████╗   ██╗   ██╗
- ██╔══██╗  ██╔═══██╗  ██╔══██╗  ╚██╗ ██╔╝
- ██████╔╝  ██║   ██║  ██████╔╝   ╚████╔╝
- ██╔══██╗  ██║   ██║  ██╔══██╗    ╚██╔╝
- ██║  ██║  ╚██████╔╝  ██║  ██║     ██║
- ╚═╝  ╚═╝   ╚═════╝   ╚═╝  ╚═╝     ╚═╝
+    # ASCII Art - using basic ASCII for terminal compatibility
+    ascii_art = r"""
+ ____   ___  ____  _   _
+|  _ \ / _ \|  _ \| | | |
+| |_) | | | | |_) | |_| |
+|  _ <| |_| |  _ < \__, |
+|_| \_\\___/|_| \_\  /_/
 """
     
     # Header with ASCII Art and Tagline
