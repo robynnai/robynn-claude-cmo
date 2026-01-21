@@ -12,26 +12,28 @@ curl -fsSL https://raw.githubusercontent.com/robynnai/robynn-claude-cmo/main/ins
 
 The installer will:
 - Set up the plugin in `~/.claude/skills/rory`
-- Prompt for your API key
+- Create a virtual environment and install dependencies
+- Prompt for your API key (optional, can skip and configure later)
 - Configure both Claude Code and Claude Desktop automatically
 
 ### 2. Get Your API Key
 
-Go to https://robynn.ai/settings/api-keys and generate a key.
-(Sign up first if you don't have an account — **20 free tasks/month**)
+1. Go to https://robynn.ai/settings/api-keys
+2. Sign up if you don't have an account (**20 free tasks/month**)
+3. Generate and copy your API key
 
 ### 3. Configure Rory
 
-**Option A: Direct setup (works everywhere)**
-```bash
-rory init <your_api_key>
-```
-
-**Option B: Interactive wizard (terminal only)**
+**Option A: Interactive wizard**
 ```bash
 rory init
 ```
 Opens browser → guides you through signup → saves your key
+
+**Option B: Direct setup with API key**
+```bash
+rory init <your_api_key>
+```
 
 **Option C: Manual configuration**
 ```bash
@@ -77,14 +79,14 @@ Rory uses a **remote-first thin-client architecture**:
 
 ### Content Creation
 - LinkedIn posts, tweets, blog outlines
-- Cold emails, one-pagers
+- Cold emails, one-pagers, marketing briefs
 - All content uses YOUR voice from Brand Hub
 
 ### Research
-- Company deep-dives
-- Competitive intelligence
-- People finding (Apollo, Proxycurl)
-- Market research
+- Company deep-dives (website, tech stack, funding, team)
+- Competitive intelligence and comparisons
+- People finding (contacts, decision-makers)
+- Market research and topic analysis
 
 ### Ads Management
 - Google Ads performance and campaigns
@@ -93,58 +95,81 @@ Rory uses a **remote-first thin-client architecture**:
 
 ## Usage Examples
 
-Just ask Claude:
+Just ask Claude naturally:
 
 ```
 "Write a LinkedIn post about our new AI feature"
-"Roast our landing page at https://my-startup.com"
-"Research Stripe and find their marketing team contacts"
-"Show me our Google Ads performance for the last 30 days"
+"Research Stripe and summarize their marketing strategy"
+"Find VP of Marketing contacts at Series A fintech startups"
+"Create a marketing brief for our product launch"
+"Analyze our competitors in the CRM space"
+```
+
+Or use CLI commands directly:
+
+```bash
+rory research Stripe
+rory competitors HubSpot
+rory write linkedin post about our new feature
+rory brief --for "product launch campaign"
 ```
 
 ## Pricing
 
 | Tier | Limit | Price |
 |------|-------|-------|
+| Anonymous | 5 tasks/day | $0 |
 | Free | 20 tasks/month | $0 |
 | Pro | 500 tasks/day | See robynn.ai/pricing |
 
 ## Commands
 
-Run `rory help` to see all commands with examples.
+Run `rory help` to see all commands.
 
 ### Account & Setup
+
 | Command | Description |
 |---------|-------------|
 | `rory init` | Interactive setup wizard (opens browser) |
 | `rory init <api_key>` | Direct setup with API key |
-| `rory config <api_key>` | Save API key (alias for init) |
+| `rory config <api_key>` | Save API key manually |
 | `rory logout` | Remove saved API key |
-| `rory uninstall` | Remove the Rory plugin |
+| `rory uninstall` | Remove the Rory plugin completely |
 
 ### Status & Info
+
 | Command | Description |
 |---------|-------------|
-| `rory status` | Check connection and brand hub status |
+| `rory status` | Check connection and Brand Hub status |
 | `rory status --debug` | Show raw API response for debugging |
 | `rory usage` | View remaining tasks and tier info |
 | `rory sync` | Verify Brand Hub connection |
 | `rory voice` | Preview brand voice settings |
+| `rory help` | Show help with all commands and examples |
 
 ### Content & Research
+
 | Command | Description |
 |---------|-------------|
-| `rory write <type> [topic]` | Create content (linkedin-post, tweet, email, blog-outline) |
-| `rory brief --for <topic>` | Generate a marketing brief |
 | `rory research <company>` | Deep-dive company research |
 | `rory competitors <company>` | Competitive intelligence |
+| `rory write <type> [topic]` | Create content (linkedin, tweet, email, blog) |
+| `rory brief --for <topic>` | Generate a marketing brief |
 | `rory "<any request>"` | Free-form natural language query |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output results in JSON format |
 
 ## Uninstall
 
 ```bash
 rory uninstall
 ```
+
+This will prompt for confirmation before removing the plugin directory.
 
 ## Alternative Installation
 
@@ -155,23 +180,24 @@ git clone https://github.com/robynnai/robynn-claude-cmo.git ~/.claude/skills/ror
 cd ~/.claude/skills/rory
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-cp .env.example .env
-# Edit .env and add your ROBYNN_API_KEY
+```
+
+Then configure your API key:
+```bash
+echo "ROBYNN_API_KEY=your-api-key-here" >> .env
 ```
 
 ## Claude Desktop (MCP) Setup
 
-The install script automatically configures Claude Desktop. Just run:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/robynnai/robynn-claude-cmo/main/install.sh | bash
-```
-
-Then restart Claude Desktop.
+The install script automatically configures Claude Desktop. Just run the installer and restart Claude Desktop.
 
 ### Manual Configuration
 
-If you need to configure manually, edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+If you need to configure manually, edit your Claude Desktop config:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Linux:** `~/.config/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -187,28 +213,71 @@ If you need to configure manually, edit `~/Library/Application Support/Claude/cl
 }
 ```
 
+Then restart Claude Desktop.
+
 ### Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `rory_query` | General marketing requests |
-| `rory_research_company` | Company research |
-| `rory_research_competitors` | Competitive analysis |
-| `rory_write_content` | Content creation |
-| `rory_status` | Check connection status |
-| `rory_usage` | Check task quota |
+| `rory_query` | Send any marketing request to Rory |
+| `rory_research_company` | Research a specific company |
+| `rory_research_competitors` | Analyze competitors |
+| `rory_write_content` | Create marketing content (type + topic) |
+| `rory_status` | Check API connection and Brand Hub status |
+| `rory_usage` | Check remaining task quota |
 
-### Example Prompts
+### Example Prompts for Claude Desktop
 
 ```
 "Use Rory to write a LinkedIn post about our new feature"
 "Ask Rory to research Stripe's marketing strategy"
 "Check my Rory usage"
+"Have Rory analyze our competitors"
+```
+
+## Dependencies
+
+Core dependencies (installed automatically):
+- `httpx` - HTTP client for API calls
+- `rich` - Terminal styling for help display
+- `pydantic` - Data validation
+- `python-dotenv` - Environment configuration
+- `fastmcp` - MCP server framework
+
+Optional (for local research tools):
+- `google-ads` - Google Ads API integration
+
+## Development
+
+### Running Tests
+
+```bash
+cd ~/.claude/skills/rory
+.venv/bin/pytest tests/
+```
+
+### Project Structure
+
+```
+robynn-claude-cmo/
+├── rory.py              # Main CLI entry point
+├── mcp_server.py        # MCP server for Claude Desktop
+├── install.sh           # Installation script
+├── bin/rory             # Shell wrapper script
+├── tools/               # Core tool implementations
+│   ├── robynn.py        # Robynn API client
+│   ├── remote_cmo.py    # Remote CMO execution
+│   ├── onboarding.py    # Setup wizard
+│   ├── help_display.py  # CLI help display
+│   └── ...              # Research & ads tools
+├── agents/              # Agent skill definitions
+├── skills/              # Skill configurations
+└── tests/               # Test suite
 ```
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Support
 

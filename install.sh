@@ -10,7 +10,67 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CREAM='\033[38;5;229m'
 NC='\033[0m' # No Color
+
+# ============================================================================
+# Animation Functions
+# ============================================================================
+
+# Spinner animation for long-running operations
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    
+    # Hide cursor
+    tput civis 2>/dev/null || true
+    
+    while ps -p $pid > /dev/null 2>&1; do
+        for i in $(seq 0 9); do
+            printf "\r  ${CREAM}${spinstr:$i:1}${NC} %s" "$message"
+            sleep $delay
+        done
+    done
+    
+    # Clear the spinner line
+    printf "\r%*s\r" $((${#message} + 5)) ""
+    
+    # Show cursor
+    tput cnorm 2>/dev/null || true
+}
+
+# Run a command with spinner animation
+run_with_spinner() {
+    local message=$1
+    shift
+    "$@" &
+    local pid=$!
+    spinner $pid "$message"
+    wait $pid
+    return $?
+}
+
+# Fade-in effect for ASCII banner (line by line reveal)
+display_banner() {
+    local delay=${1:-0.04}
+    echo ""
+    sleep $delay; echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
+    sleep $delay; echo -e "${CREAM}│                                                                             │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ██████╗  ██████╗ ██████╗ ██╗   ██╗                       │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ██╔══██╗██╔═══██╗██╔══██╗╚██╗ ██╔╝                       │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ██████╔╝██║   ██║██████╔╝ ╚████╔╝                        │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ██╔══██╗██║   ██║██╔══██╗  ╚██╔╝                         │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ██║  ██║╚██████╔╝██║  ██║   ██║                          │${NC}"
+    sleep $delay; echo -e "${CREAM}│                    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝                          │${NC}"
+    sleep $delay; echo -e "${CREAM}│                                                                             │${NC}"
+    sleep $delay; echo -e "${CREAM}│                         Your CMO in the Terminal                            │${NC}"
+    sleep $delay; echo -e "${CREAM}│                           Powered by Robynn AI                              │${NC}"
+    sleep $delay; echo -e "${CREAM}│                                                                             │${NC}"
+    sleep $delay; echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
+    echo ""
+}
 
 # Detect if we are running inside the repository or installing fresh
 if [ -f "rory.py" ] && [ -d ".claude-plugin" ]; then
@@ -50,12 +110,12 @@ echo -e "${YELLOW}Setting up virtual environment and dependencies...${NC}"
 # Use uv if available for speed, otherwise standard venv
 if command -v uv &> /dev/null; then
     echo -e "  Using ${BLUE}uv${NC} for faster installation"
-    uv venv .venv --quiet
-    uv pip install -r requirements.txt --quiet
+    uv venv .venv --quiet 2>/dev/null
+    run_with_spinner "Installing dependencies..." uv pip install -r requirements.txt --quiet
 else
     python3 -m venv .venv
-    .venv/bin/pip install --quiet --upgrade pip
-    .venv/bin/pip install --quiet -r requirements.txt
+    run_with_spinner "Upgrading pip..." .venv/bin/pip install --quiet --upgrade pip
+    run_with_spinner "Installing dependencies..." .venv/bin/pip install --quiet -r requirements.txt
 fi
 
 echo -e "  ${GREEN}✓${NC} Dependencies installed"
@@ -92,16 +152,23 @@ if [ -z "$API_KEY" ]; then
     API_KEY=""
     echo -e "  ${YELLOW}⚠${NC} Skipped - run 'rory init' later to configure"
 else
-    # Validate the API key
-    echo -e "  ${YELLOW}Validating API key...${NC}"
-    HTTP_STATUS=$(.venv/bin/python3 -c "
+    # Validate the API key with spinner
+    validate_api_key() {
+        .venv/bin/python3 -c "
 import httpx
 try:
     r = httpx.get('https://robynn.ai/api/cli/context', headers={'Authorization': 'Bearer $API_KEY'}, timeout=10)
     print(r.status_code)
 except:
     print('error')
-" 2>/dev/null)
+" 2>/dev/null
+    }
+    
+    # Run validation in background with spinner
+    validate_api_key &
+    VALIDATE_PID=$!
+    spinner $VALIDATE_PID "Validating API key..."
+    HTTP_STATUS=$(validate_api_key)
     
     if [ "$HTTP_STATUS" = "200" ]; then
         echo -e "  ${GREEN}✓${NC} API key validated"
@@ -215,27 +282,11 @@ else
 fi
 
 # ============================================================================
-# Success Message with ASCII Art
+# Success Message with ASCII Art (Animated Fade-in)
 # ============================================================================
 
-# Define cream/beige color for the ASCII art (matches screenshot)
-CREAM='\033[38;5;229m'
-
-echo ""
-echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
-echo -e "${CREAM}│                                                                             │${NC}"
-echo -e "${CREAM}│                    ██████╗  ██████╗ ██████╗ ██╗   ██╗                       │${NC}"
-echo -e "${CREAM}│                    ██╔══██╗██╔═══██╗██╔══██╗╚██╗ ██╔╝                       │${NC}"
-echo -e "${CREAM}│                    ██████╔╝██║   ██║██████╔╝ ╚████╔╝                        │${NC}"
-echo -e "${CREAM}│                    ██╔══██╗██║   ██║██╔══██╗  ╚██╔╝                         │${NC}"
-echo -e "${CREAM}│                    ██║  ██║╚██████╔╝██║  ██║   ██║                          │${NC}"
-echo -e "${CREAM}│                    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝                          │${NC}"
-echo -e "${CREAM}│                                                                             │${NC}"
-echo -e "${CREAM}│                         Your CMO in the Terminal                            │${NC}"
-echo -e "${CREAM}│                           Powered by Robynn AI                              │${NC}"
-echo -e "${CREAM}│                                                                             │${NC}"
-echo -e "${CREAM}●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●${NC}"
-echo ""
+# Display the banner with fade-in effect
+display_banner
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""
 
