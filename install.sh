@@ -246,7 +246,7 @@ env_config = {}
 if api_key and api_key != "":
     env_config['ROBYNN_API_KEY'] = api_key
 
-config['mcpServers']['rory'] = {
+config['mcpServers']['Robynn AI - Rory'] = {
     'command': os.path.join(install_dir, '.venv', 'bin', 'python'),
     'args': [os.path.join(install_dir, 'mcp_server.py')],
     'env': env_config

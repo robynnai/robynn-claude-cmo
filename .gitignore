@@ -97,6 +97,7 @@ service_account*.json
 *.jpg
 *.jpeg
 *.gif
+!icon.png
 !**/templates/**/*.png
 !**/templates/**/*.jpg
 !**/assets/**/*.png

@@ -16,7 +16,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 ROBYNN_CLI_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
 
-mcp = FastMCP("Rory")
+mcp = FastMCP("Robynn AI - Rory")
 
 
 def _get_headers(api_key: Optional[str]) -> Dict[str, str]:

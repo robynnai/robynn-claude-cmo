@@ -202,7 +202,7 @@ If you need to configure manually, edit your Claude Desktop config:
 ```json
 {
   "mcpServers": {
-    "rory": {
+    "Robynn AI - Rory": {
       "command": "/Users/YOUR_USERNAME/.claude/skills/rory/.venv/bin/python",
       "args": ["/Users/YOUR_USERNAME/.claude/skills/rory/mcp_server.py"],
       "env": {
