@@ -30,11 +30,25 @@ This means:
 
 ## Setup
 
-1. Get your API key from https://robynn.ai/settings/api-keys
-2. Configure Rory: `rory config <your_api_key>`
-3. Verify connection: `rory status`
+**Option A: Direct setup (works in Claude Code/Desktop)**
+```bash
+rory init <your_api_key>
+```
 
-That's it. Your brand context is fetched automatically on each request.
+**Option B: Interactive wizard (terminal only)**
+```bash
+rory init
+```
+Opens browser → sign up → paste key
+
+**Verify connection:**
+```bash
+rory status
+```
+
+Get your API key at: https://robynn.ai/settings/api-keys
+
+Your brand context is fetched automatically on each request.
 
 ## Task Routing
 
@@ -44,7 +58,9 @@ That's it. Your brand context is fetched automatically on each request.
 | "research", "tell me about", "competitive", "vs", "compare" | Research | → Remote CMO |
 | "find people", "contacts", "who works at" | People | → Remote CMO |
 | "ads", "campaign", "google ads", "linkedin ads" | Ads | → Remote CMO |
-| "status", "usage", "sync" | System | → Run `./bin/rory [command]` |
+| "status", "usage", "sync", "voice" | System | → Run `./bin/rory [command]` |
+| "init <key>", "config <key>" | Auth (direct) | → Run `./bin/rory init <key>` |
+| "init", "login", "logout", "uninstall" | Auth (interactive) | → Run `./bin/rory [command]` |
 | "help", "what can you do", "--help" | Help | → **MANDATORY**: Run `./bin/rory help` and display output |
 
 ## Help & Documentation
@@ -124,13 +140,13 @@ If your Brand Hub is missing information, the agent will tell you what to add.
 ## Error Handling
 
 **If not connected:**
-"Run `rory config <your_api_key>` to connect to Robynn."
+"Run `rory init <your_api_key>` to connect. Get your key at https://robynn.ai/settings/api-keys"
 
 **If Brand Hub not configured:**
-"Your Brand Hub needs setup. Visit Settings → Brand Hub in Robynn to add your company info."
+"Your Brand Hub needs setup. Visit https://robynn.ai/dashboard → Brand Hub to add your company info."
 
 **If rate limited:**
-"You've used all your tasks this month. Upgrade at robynn.ai/pricing for more."
+"You've used all your tasks this period. Check `rory usage` or upgrade at robynn.ai/pricing."
 
 **If request is unclear:**
 "Quick clarification: [ONE specific question]?"

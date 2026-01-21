@@ -62,7 +62,12 @@ class RemoteCMO:
                 timeout=600.0
             ) as response:
                 if response.status_code == 401:
-                    yield {"type": "error", "message": "Unauthorized: Please check your ROBYNN_API_KEY"}
+                    yield {
+                        "type": "error", 
+                        "message": "Not connected to Robynn.\n\n"
+                                   "Quick fix: Run 'rory init' to set up your account.\n"
+                                   "Or if you already have a key: 'rory config <your_key>'"
+                    }
                     return
                 elif response.status_code != 200:
                     yield {"type": "error", "message": f"Server error: {response.status_code}"}

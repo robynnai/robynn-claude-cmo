@@ -269,6 +269,33 @@ RECOVERY_GUIDES: Dict[str, Dict[str, RecoveryGuidance]] = {
                 "3. Add to .env: PROXYCURL_API_KEY=your_key_here"
             ]
         )
+    },
+    # Robynn Errors
+    "robynn": {
+        "401": RecoveryGuidance(
+            summary="Robynn API key is invalid or expired",
+            steps=[
+                "1. Log into Robynn: https://robynn.ai/settings/api-keys",
+                "2. Generate a new API key",
+                "3. Run: rory config <new_key>"
+            ],
+            docs_url="https://robynn.ai/docs/rory"
+        ),
+        "429": RecoveryGuidance(
+            summary="You've used all your tasks for this period",
+            steps=[
+                "1. Check your usage: rory usage",
+                "2. Wait for reset or upgrade at https://robynn.ai/pricing"
+            ]
+        ),
+        "missing_credential": RecoveryGuidance(
+            summary="Not connected to Robynn",
+            steps=[
+                "1. Run: rory init",
+                "2. Follow the setup wizard",
+                "3. Paste your API key when prompted"
+            ]
+        )
     }
 }
 

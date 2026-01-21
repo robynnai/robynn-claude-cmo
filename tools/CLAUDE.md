@@ -35,7 +35,9 @@ robynn-rory/
 |---------|--------------|
 | `rory help`   | Show this help screen with ASCII art branding |
 | `rory status` | Show what context is currently loaded |
-| `rory config` | Connect to your Robynn workspace |
+| `rory init`   | Connect to your Robynn account (interactive) |
+| `rory config` | Connect to your Robynn account (manual) |
+| `rory logout` | Remove your account credentials |
 | `rory sync`   | Pull latest Brand Hub updates |
 | `rory write [type]` | Create content (linkedin, tweet, blog, email) |
 | `rory research [company]` | Research a company |

@@ -127,13 +127,19 @@ def init_command(api_key: str):
     print("🚀 I now have full access to your Brand Hub context.")
     print("✨ Let's make some noise.")
 
-def status_command():
+def status_command(debug=False):
     """Check the connection status and brand details."""
     api_key = os.environ.get("ROBYNN_API_KEY")
     if not api_key:
-        print("\nStatus: ⚪ Anonymous (Free Tier)")
-        print("→ I'm running with generic marketing context and rate limits.")
-        print("→ To unlock your Brand Hub and Pro features, run:")
+        print("\nStatus: ⚪ Not Connected (Anonymous Mode)")
+        print("─" * 45)
+        print("You are running in anonymous mode with generic marketing")
+        print("context and limited tasks (5/day).\n")
+        print("Quick setup (takes 2 minutes):")
+        print("  1. Run: rory init")
+        print("  2. Create your free account (20 free tasks/month)")
+        print("  3. Paste your API key when prompted\n")
+        print("Or if you already have a key, run:")
         print("  rory config <your_api_key>")
         print("\nGet your key at: https://robynn.ai/settings/api-keys")
         return
@@ -142,14 +148,51 @@ def status_command():
     client = RobynnClient(api_key)
     context = client.fetch_context()
     
+    if debug:
+        print("\n[DEBUG] Raw API response:")
+        print(json.dumps(context, indent=2, default=str))
+        print()
+    
     if context:
-        print(f"Organization: {context.get('organizationId', 'Loaded')}")
-        print(f"Company:      {context.get('companyName', 'Not Set')}")
-        print(f"Website:      {context.get('companyWebsite', 'Not Set')}")
-        if context.get('voiceAndTone'):
-            print("Brand Voice:  ✅ Synchronized")
+        # Extract data from the actual API structure
+        org_id = context.get('organizationId', 'Unknown')
+        
+        # Company name can be at identity.companyName or top-level companyName
+        identity = context.get('identity', {})
+        company_name = identity.get('companyName') or context.get('companyName') or ''
+        
+        # Website might be in various places
+        company_website = context.get('companyWebsite') or context.get('website') or ''
+        
+        # Voice is structured differently - check for voice.toneSpectrum or voice.coreAttributes
+        voice = context.get('voice', {})
+        voice_configured = bool(
+            voice.get('coreAttributes') or 
+            voice.get('toneSpectrum') or 
+            context.get('voiceAndTone')
+        )
+        
+        # Check if product knowledge exists
+        product_knowledge = context.get('productKnowledge', {})
+        features = product_knowledge.get('features', [])
+        
+        # Display results
+        print(f"Organization: {org_id}")
+        print(f"Company:      {company_name if company_name else 'Not Set'}")
+        print(f"Website:      {company_website if company_website else 'Not Set'}")
+        
+        if voice_configured:
+            print("Brand Voice:  ✅ Configured")
         else:
             print("Brand Voice:  ⚠️ Not configured in Brand Hub")
+        
+        if features:
+            print(f"Features:     {len(features)} loaded")
+        
+        # Show helpful message if company name is not set
+        if not company_name:
+            print("\n💡 Tip: Add your company name in Brand Hub → Settings")
+            print("   Visit: https://robynn.ai/dashboard → Brand Hub")
     else:
         print("⚠️  Connected, but I couldn't fetch your brand context. Check your settings on Robynn AI.")
 
@@ -255,6 +298,7 @@ if __name__ == "__main__":
     parser.add_argument("command", nargs="?")
     parser.add_argument("arg", nargs="?")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--debug", action="store_true", help="Show raw API responses")
     args = parser.parse_args()
 
     if not args.command:
@@ -263,6 +307,7 @@ if __name__ == "__main__":
         
     command = args.command
     json_output = args.json
+    debug_mode = args.debug
     
     if command in ["init", "config"]:
         if not args.arg:
@@ -270,7 +315,7 @@ if __name__ == "__main__":
             sys.exit(1)
         init_command(args.arg)
     elif command == "status":
-        status_command()
+        status_command(debug=debug_mode)
     elif command == "usage":
         usage_command()
     elif command == "sync":
