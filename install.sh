@@ -145,13 +145,31 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE}  Get your API key at: ${YELLOW}https://robynn.ai/settings/api-keys${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo -e "Enter your Robynn API key (or press Enter to skip for now):"
-read -r API_KEY
+# Load existing key (if present) so reinstall can preserve it by default
+EXISTING_API_KEY=""
+if [ -f ".env" ] && grep -q "^ROBYNN_API_KEY=" .env 2>/dev/null; then
+    EXISTING_API_KEY=$(grep "^ROBYNN_API_KEY=" .env | tail -n 1 | cut -d'=' -f2- | tr -d '\r')
+fi
 
-if [ -z "$API_KEY" ]; then
-    API_KEY=""
-    echo -e "  ${YELLOW}⚠${NC} Skipped - run 'rory init' later to configure"
+if [ -n "$EXISTING_API_KEY" ]; then
+    echo -e "Existing API key detected."
+    echo -e "Press Enter to keep current key, or paste a new one to replace it:"
 else
+    echo -e "Enter your Robynn API key (or press Enter to skip for now):"
+fi
+
+read -r API_KEY_INPUT
+
+if [ -z "$API_KEY_INPUT" ]; then
+    if [ -n "$EXISTING_API_KEY" ]; then
+        API_KEY="$EXISTING_API_KEY"
+        echo -e "  ${GREEN}✓${NC} Keeping existing API key"
+    else
+        API_KEY=""
+        echo -e "  ${YELLOW}⚠${NC} Skipped - run 'rory init' later to configure"
+    fi
+else
+    API_KEY="$API_KEY_INPUT"
     # Validate the API key with spinner
     validate_api_key() {
         .venv/bin/python3 -c "

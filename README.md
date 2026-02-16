@@ -16,6 +16,8 @@ The installer will:
 - Prompt for your API key (optional, can skip and configure later)
 - Configure both Claude Code and Claude Desktop automatically
 
+If you are already using Rory, re-running the installer upgrades to the latest plugin behavior and keeps your existing API key by default.
+
 ### 2. Get Your API Key
 
 1. Go to https://robynn.ai/settings/api-keys
@@ -69,11 +71,13 @@ Rory uses a **remote-first thin-client architecture**:
 
 1. **You run `rory init`** to connect your Robynn account
 2. **You ask Rory** to create content, do research, or manage ads
-3. **Rory sends your request** to the Robynn CMO v2 agent
-4. **The agent fetches YOUR brand context** automatically
-5. **Results come back already on-brand**
+3. **Rory validates auth and bootstraps your org context** from Robynn API
+4. **Rory routes your prompt into a coarse focus hint** (server resolves private skills)
+5. **Rory sends your request** to Robynn CMO (`cmo_v2`/`cmo_v3`)
+6. **The agent fetches YOUR brand context** and returns on-brand output
 
 **No local brand files.** Your brand context lives in the cloud and is always up-to-date.
+If brand setup is incomplete, Rory hard-fails with setup instructions instead of returning generic output.
 
 ## Features
 
