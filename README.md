@@ -1,6 +1,8 @@
 # Rory — Your CMO in the Terminal
 
-Hey, I'm Rory. I'm an AI-powered Chief Marketing Officer assistant for Claude Code and Claude Desktop. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
+AI-powered Chief Marketing Officer assistant for Claude Code and Claude Desktop. Delegate your marketing strategy, research, and content creation to a remote-first expert agent that already knows your brand.
+
+Part of the [Robynn AI](https://robynn.ai) platform — connects to 24 specialized backend agents via the CMO v3 universal router.
 
 ## Quick Start
 
@@ -73,7 +75,7 @@ Rory uses a **remote-first thin-client architecture**:
 2. **You ask Rory** to create content, do research, or manage ads
 3. **Rory validates auth and bootstraps your org context** from Robynn API
 4. **Rory routes your prompt into a coarse focus hint** (server resolves private skills)
-5. **Rory sends your request** to Robynn CMO (`cmo_v2`/`cmo_v3`)
+5. **Rory sends your request** to Robynn CMO v3 (universal router with FAST/DEEP lanes)
 6. **The agent fetches YOUR brand context** and returns on-brand output
 
 **No local brand files.** Your brand context lives in the cloud and is always up-to-date.
