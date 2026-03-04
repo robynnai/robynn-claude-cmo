@@ -1,5 +1,6 @@
 from rich.console import Console
 
+
 def display_help():
     console = Console()
 
@@ -8,13 +9,22 @@ def display_help():
 
     console.print("[bold]USAGE[/bold]")
     console.print("    rory <command> [args]")
-    console.print("    rory \"<natural language request>\"\n")
+    console.print('    rory "<natural language request>"\n')
 
     console.print("[bold]COMMANDS[/bold]")
-    console.print("    [green]research <company>[/green]        Research a company's marketing strategy")
+    console.print(
+        "    [green]research <company>[/green]        Research a company's marketing strategy"
+    )
     console.print("    [green]competitors <name>[/green]        Analyze competitor landscape")
-    console.print("    [green]write <type>[/green]              Create content (linkedin, tweet, email, blog)")
+    console.print(
+        "    [green]write <type>[/green]              Create content (linkedin, tweet, email, blog)"
+    )
     console.print("    [green]brief --for <type>[/green]        Create a marketing brief")
+    console.print(
+        "    [green]share <file.html>[/green]         Publish an HTML file and get a secure link"
+    )
+    console.print("    [green]share list[/green]                List all active shares")
+    console.print("    [green]share revoke <share-id>[/green]   Revoke a share")
     console.print("    [green]status[/green]                    Check connection status")
     console.print("    [green]usage[/green]                     Check task usage this month")
     console.print("    [green]init[/green]                      Interactive setup wizard")
@@ -28,20 +38,28 @@ def display_help():
     console.print("    --json                    Output in JSON format\n")
 
     console.print("[bold]EXAMPLES[/bold]")
-    console.print("    rory \"Write a LinkedIn post about AI automation\"")
+    console.print('    rory "Write a LinkedIn post about AI automation"')
     console.print("    rory research Stripe")
-    console.print("    rory competitors \"marketing automation\"")
+    console.print('    rory competitors "marketing automation"')
     console.print("    rory write linkedin post about our new feature")
-    console.print("    rory brief --for \"product launch campaign\"\n")
+    console.print('    rory brief --for "product launch campaign"')
+    console.print("    rory share ./launch-page.html --title \"Launch Page\" --ttl 48")
+    console.print("    rory share list")
+    console.print("    rory share revoke <share-id>\n")
 
     console.print("[bold]SETUP[/bold]")
-    console.print("    1. Get your API key at [underline]https://robynn.ai/settings/api-keys[/underline]")
+    console.print(
+        "    1. Get your API key at [underline]https://robynn.ai/settings/api-keys[/underline]"
+    )
     console.print("    2. Run: rory init  [dim](or rory config <your_api_key>)[/dim]")
     console.print("    3. Verify: rory status\n")
 
     console.print("For more help, visit [underline]https://robynn.ai/docs/rory[/underline]")
     console.print("[dim]───[/dim]")
-    console.print("What can I help you with? Write content, research companies, or analyze competitors.")
+    console.print(
+        "What can I help you with? Write content, research companies, or analyze competitors."
+    )
+
 
 if __name__ == "__main__":
     display_help()

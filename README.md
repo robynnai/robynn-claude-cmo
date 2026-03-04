@@ -161,6 +161,9 @@ Run `rory help` to see all commands.
 | `rory competitors <company>` | Competitive intelligence |
 | `rory write <type> [topic]` | Create content (linkedin, tweet, email, blog) |
 | `rory brief --for <topic>` | Generate a marketing brief |
+| `rory share <file.html> [--title <value>] [--ttl <hours>]` | Publish an HTML file to a secure share URL |
+| `rory share list` | List your recent shares |
+| `rory share revoke <share-id>` | Revoke a share link |
 | `rory "<any request>"` | Free-form natural language query |
 
 ### Options
@@ -229,6 +232,7 @@ Then restart Claude Desktop.
 | `rory_research_company` | Research a specific company |
 | `rory_research_competitors` | Analyze competitors |
 | `rory_write_content` | Create marketing content (type + topic) |
+| `rory_share_html` | Publish HTML content and return share URL |
 | `rory_status` | Check API connection and Brand Hub status |
 | `rory_usage` | Check remaining task quota |
 
@@ -239,6 +243,7 @@ Then restart Claude Desktop.
 "Ask Rory to research Stripe's marketing strategy"
 "Check my Rory usage"
 "Have Rory analyze our competitors"
+"Share HTML output with rory_share_html."
 ```
 
 ## Dependencies

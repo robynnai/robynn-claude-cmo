@@ -41,6 +41,25 @@ def _api_get(path: str, api_key: Optional[str]) -> Tuple[Optional[Dict[str, Any]
         return None, f"Failed to fetch {path}: {exc}"
 
 
+def _api_post(
+    path: str,
+    payload: Dict[str, Any],
+    api_key: Optional[str],
+) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    if not api_key:
+        return None, "Not connected. Set ROBYNN_API_KEY."
+
+    url = f"{ROBYNN_CLI_BASE_URL}{path}"
+    try:
+        with httpx.Client(headers=_get_headers(api_key)) as client:
+            response = client.post(url, json=payload, timeout=120.0)
+            response.raise_for_status()
+            data = response.json()
+            return data, None
+    except Exception as exc:
+        return None, f"Failed to post {path}: {exc}"
+
+
 def _run_cmo_query(message: str) -> str:
     cmo = RemoteCMO()
     for event in cmo.stream_query(message):
@@ -75,6 +94,38 @@ def rory_research_competitors(company: str) -> str:
 def rory_write_content(content_type: str, topic: str) -> str:
     """Create marketing content (linkedin, tweet, blog, email)."""
     return _run_cmo_query(f"write {content_type} {topic}")
+
+
+@mcp.tool(annotations={"openWorldHint": True})
+def rory_share_html(html: str, title: str = "", ttl_hours: int = 24) -> str:
+    """Create a share link for provided HTML and return its secure URL."""
+    api_key = os.environ.get("ROBYNN_API_KEY")
+    if not api_key:
+        return (
+            "Not connected. Run: rory init or set ROBYNN_API_KEY in environment."
+        )
+
+    payload = {
+        "agentId": "rory",
+        "params": {
+            "action": "share",
+            "title": title or "Shared HTML",
+            "html": html,
+            "ttlHours": ttl_hours,
+            "sourceFilename": "shared.html",
+        },
+    }
+
+    data, error = _api_post("/execute", payload, api_key)
+    if error:
+        return error
+    if not data:
+        return "No response from Rory share API."
+
+    public_url = data.get("publicUrl") or data.get("data", {}).get("publicUrl")
+    if not public_url:
+        return f"Unexpected share response: {data}"
+    return f"Share link: {public_url}"
 
 
 @mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
