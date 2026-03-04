@@ -85,6 +85,10 @@ def main():
         script_args = [sys.executable, "tools/remote_cmo.py", f"write {target}"]
         subprocess.run(script_args)
 
+    elif cmd == "share":
+        from tools.rory_share import handle_share_command
+        handle_share_command(unknown)
+
     elif cmd == "brief":
         # Route to remote_cmo.py for a brief
         # Filter out --for if it was used as a flag
@@ -160,4 +164,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
