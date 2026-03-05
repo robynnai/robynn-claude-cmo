@@ -59,6 +59,29 @@ def _api_post(
         return None, f"Failed to post {path}: {exc}"
 
 
+def _is_voice_configured(context: Dict[str, Any]) -> bool:
+    legacy_voice = context.get("voiceAndTone")
+    if isinstance(legacy_voice, str) and legacy_voice.strip():
+        return True
+
+    voice = context.get("voice")
+    if not isinstance(voice, dict):
+        return False
+
+    core_attributes = voice.get("coreAttributes")
+    if isinstance(core_attributes, list):
+        if any(isinstance(attr, str) and attr.strip() for attr in core_attributes):
+            return True
+
+    tone_spectrum = voice.get("toneSpectrum")
+    if isinstance(tone_spectrum, dict) and any(
+        value is not None for value in tone_spectrum.values()
+    ):
+        return True
+
+    return False
+
+
 def _run_cmo_query(message: str) -> str:
     cmo = RemoteCMO()
     for event in cmo.stream_query(message):
@@ -147,7 +170,7 @@ def rory_status() -> str:
     organization = context.get("organizationId", "Loaded")
     company = context.get("companyName", "Not Set")
     website = context.get("companyWebsite", "Not Set")
-    voice = "Configured" if context.get("voiceAndTone") else "Not configured"
+    voice = "Configured" if _is_voice_configured(context) else "Not configured"
     return (
         "Status: Connected\n"
         f"Organization: {organization}\n"
