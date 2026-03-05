@@ -11,10 +11,9 @@ if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
 from remote_cmo import RemoteCMO
+from url_config import join_url, resolve_cli_base_url
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-
-ROBYNN_CLI_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
 
 mcp = FastMCP("Robynn AI - Rory")
 
@@ -30,7 +29,7 @@ def _api_get(path: str, api_key: Optional[str]) -> Tuple[Optional[Dict[str, Any]
     if not api_key:
         return None, "Not connected. Set ROBYNN_API_KEY."
 
-    url = f"{ROBYNN_CLI_BASE_URL}{path}"
+    url = join_url(resolve_cli_base_url(), path)
     try:
         with httpx.Client(headers=_get_headers(api_key)) as client:
             response = client.get(url, timeout=30.0)
@@ -49,7 +48,7 @@ def _api_post(
     if not api_key:
         return None, "Not connected. Set ROBYNN_API_KEY."
 
-    url = f"{ROBYNN_CLI_BASE_URL}{path}"
+    url = join_url(resolve_cli_base_url(), path)
     try:
         with httpx.Client(headers=_get_headers(api_key)) as client:
             response = client.post(url, json=payload, timeout=120.0)

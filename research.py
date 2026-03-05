@@ -14,7 +14,9 @@ Usage:
 import argparse
 import json
 import sys
+import os
 from typing import Optional, Any
+from tools.url_config import join_url, resolve_cli_base_url
 
 
 def research_company(
@@ -145,7 +147,7 @@ def research_company(
         print(f"🚀 Launching deep analysis on Robynn AI platform for {company}...")
         try:
             api_key = os.environ.get("ROBYNN_API_KEY")
-            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
+            cli_base_url = resolve_cli_base_url()
             
             payload = {
                 "agentId": "geo",
@@ -157,7 +159,7 @@ def research_company(
             }
             
             with httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=300.0) as client:
-                response = client.post(f"{base_url}/execute", json=payload)
+                response = client.post(join_url(cli_base_url, "/execute"), json=payload)
                 if response.status_code == 200:
                     results["sections"]["robynn_deep_analysis"] = {
                         "source": "Robynn GEO Agent",
@@ -261,7 +263,7 @@ def research_competitor(
         print(f"🚀 Running deep competitive analysis on Robynn AI for {competitor}...")
         try:
             api_key = os.environ.get("ROBYNN_API_KEY")
-            base_url = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
+            cli_base_url = resolve_cli_base_url()
             
             payload = {
                 "agentId": "geo",
@@ -273,7 +275,7 @@ def research_competitor(
             }
             
             with httpx.Client(headers={"Authorization": f"Bearer {api_key}"}, timeout=300.0) as client:
-                response = client.post(f"{base_url}/execute", json=payload)
+                response = client.post(join_url(cli_base_url, "/execute"), json=payload)
                 if response.status_code == 200:
                     results["sections"]["robynn_competitive_intel"] = {
                         "source": "Robynn GEO Agent",

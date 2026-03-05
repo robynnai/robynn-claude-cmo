@@ -5,9 +5,10 @@ import sys
 import httpx
 from pathlib import Path
 from typing import Any, Dict, Optional
-
-
-ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai")
+try:
+    from .url_config import join_url, resolve_cli_base_url
+except ImportError:
+    from url_config import join_url, resolve_cli_base_url
 
 
 def _load_env_file() -> None:
@@ -74,7 +75,7 @@ def _post_rory_action(params: Dict[str, Any]) -> Dict[str, Any]:
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
-    url = f"{ROBYNN_API_BASE_URL}/api/cli/execute"
+    url = join_url(resolve_cli_base_url(), "/execute")
 
     payload = {"agentId": "rory", "params": params}
     with httpx.Client(headers=headers, timeout=120.0) as client:

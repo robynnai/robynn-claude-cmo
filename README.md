@@ -196,6 +196,16 @@ Then configure your API key:
 echo "ROBYNN_API_KEY=your-api-key-here" >> .env
 ```
 
+Optional endpoint overrides (for local development):
+```bash
+# App endpoints (e.g. /api/agents/cmo/stream)
+echo "ROBYNN_API_BASE_URL=http://localhost:5174" >> .env
+
+# CLI endpoints (e.g. /api/cli/context, /api/cli/execute)
+# If omitted, Rory derives this from ROBYNN_API_BASE_URL + /api/cli
+echo "ROBYNN_CLI_BASE_URL=http://localhost:5174/api/cli" >> .env
+```
+
 ## Claude Desktop (MCP) Setup
 
 The install script automatically configures Claude Desktop. Just run the installer and restart Claude Desktop.

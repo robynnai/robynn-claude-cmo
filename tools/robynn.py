@@ -5,12 +5,15 @@ import httpx
 import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
+try:
+    from .url_config import join_url, resolve_cli_base_url
+except ImportError:
+    from url_config import join_url, resolve_cli_base_url
 
 # ============================================================================
 # Configuration & Constants
 # ============================================================================
 
-ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
 ENV_FILE_NAME = ".env"
 
 # ============================================================================
@@ -22,7 +25,7 @@ class RobynnClient:
     
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("ROBYNN_API_KEY")
-        self.base_url = ROBYNN_API_BASE_URL
+        self.base_url = resolve_cli_base_url()
         
     def _get_headers(self) -> Dict[str, str]:
         if not self.api_key:
@@ -36,7 +39,7 @@ class RobynnClient:
         """Validate an API key by fetching context."""
         try:
             with httpx.Client(headers={"Authorization": f"Bearer {key}"}) as client:
-                response = client.get(f"{self.base_url}/context")
+                response = client.get(join_url(self.base_url, "/context"))
                 return response.status_code == 200
         except Exception as e:
             print(f"Error validating key: {e}")
@@ -48,7 +51,7 @@ class RobynnClient:
             return None
         try:
             with httpx.Client(headers=self._get_headers()) as client:
-                response = client.get(f"{self.base_url}/context")
+                response = client.get(join_url(self.base_url, "/context"))
                 response.raise_for_status()
                 return response.json().get("data")
         except Exception as e:
@@ -61,7 +64,7 @@ class RobynnClient:
             return None
         try:
             with httpx.Client(headers=self._get_headers()) as client:
-                response = client.get(f"{self.base_url}/usage")
+                response = client.get(join_url(self.base_url, "/usage"))
                 response.raise_for_status()
                 return response.json().get("data")
         except Exception as e:
