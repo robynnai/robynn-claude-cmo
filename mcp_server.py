@@ -52,9 +52,28 @@ def _api_post(
     try:
         with httpx.Client(headers=_get_headers(api_key)) as client:
             response = client.post(url, json=payload, timeout=120.0)
-            response.raise_for_status()
-            data = response.json()
-            return data, None
+            parsed: Optional[Dict[str, Any]] = None
+            response_text = ""
+            try:
+                body = response.json()
+                if isinstance(body, dict):
+                    parsed = body
+            except Exception:
+                response_text = response.text.strip()
+
+            if response.status_code >= 400:
+                detail = ""
+                if isinstance(parsed, dict):
+                    detail = (
+                        str(parsed.get("error") or parsed.get("message") or "")
+                    ).strip()
+                if not detail:
+                    detail = response_text or response.reason_phrase or "Request failed"
+                return None, f"Failed to post {path}: {detail} (HTTP {response.status_code})"
+
+            if not isinstance(parsed, dict):
+                return None, f"Failed to post {path}: Unexpected response format"
+            return parsed, None
     except Exception as exc:
         return None, f"Failed to post {path}: {exc}"
 
