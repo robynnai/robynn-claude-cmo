@@ -11,8 +11,11 @@ from typing import Any
 
 import httpx
 
+try:
+    from .url_config import join_url, resolve_cli_base_url
+except ImportError:
+    from url_config import join_url, resolve_cli_base_url
 
-ROBYNN_CLI_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai/api/cli")
 CACHE_FILE_NAME = ".rory_context_cache.json"
 DEFAULT_CACHE_TTL_SECONDS = int(os.environ.get("ROBYNN_CONTEXT_CACHE_TTL_SECONDS", "1800"))
 
@@ -40,7 +43,7 @@ class CMOContextManager:
         ttl_seconds: int | None = None,
     ) -> None:
         self.api_key = api_key or os.environ.get("ROBYNN_API_KEY")
-        self.cli_base_url = (cli_base_url or ROBYNN_CLI_BASE_URL).rstrip("/")
+        self.cli_base_url = (cli_base_url or resolve_cli_base_url()).rstrip("/")
         self.cache_file = (
             Path(cache_file)
             if cache_file is not None
@@ -86,7 +89,7 @@ class CMOContextManager:
             pass
 
     def _fetch_context_from_api(self) -> dict[str, Any]:
-        url = f"{self.cli_base_url}/context"
+        url = join_url(self.cli_base_url, "/context")
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
@@ -186,4 +189,3 @@ class CMOContextManager:
     @staticmethod
     def _fingerprint(value: str) -> str:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
-

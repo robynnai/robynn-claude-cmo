@@ -12,6 +12,10 @@ from cmo_context import (
     ContextBootstrapError,
 )
 from skill_router import SkillRouter
+try:
+    from .url_config import join_url, resolve_api_base_url, resolve_cli_base_url
+except ImportError:
+    from url_config import join_url, resolve_api_base_url, resolve_cli_base_url
 
 # ============================================================================
 # Configuration
@@ -37,7 +41,6 @@ def load_env_file():
 # Load .env file on import
 load_env_file()
 
-ROBYNN_API_BASE_URL = os.environ.get("ROBYNN_API_BASE_URL", "https://robynn.ai")
 DEFAULT_ASSISTANT = os.environ.get("ROBYNN_CMO_ASSISTANT", "auto").strip().lower()
 
 # ============================================================================
@@ -50,8 +53,11 @@ class RemoteCMO:
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("ROBYNN_API_KEY")
-        self.base_url = ROBYNN_API_BASE_URL
-        self.context_manager = CMOContextManager(api_key=self.api_key)
+        self.base_url = resolve_api_base_url()
+        self.context_manager = CMOContextManager(
+            api_key=self.api_key,
+            cli_base_url=resolve_cli_base_url(),
+        )
         self.router = SkillRouter()
 
     def _get_headers(self) -> Dict[str, str]:
@@ -93,7 +99,7 @@ class RemoteCMO:
         self, message: str, refresh_context: bool = False
     ) -> Generator[Dict[str, Any], None, None]:
         """Execute a query and stream progress/results."""
-        url = f"{self.base_url}/api/agents/cmo/stream"
+        url = join_url(self.base_url, "/api/agents/cmo/stream")
 
         try:
             payload = self._build_payload(message=message, refresh_context=refresh_context)
@@ -118,9 +124,28 @@ class RemoteCMO:
                     }
                     return
                 elif response.status_code != 200:
+                    raw_error_body = ""
+                    try:
+                        raw_error_body = response.read().decode("utf-8", errors="ignore")
+                    except Exception:
+                        raw_error_body = ""
+
+                    detail = ""
+                    try:
+                        error_payload = json.loads(raw_error_body) if raw_error_body else {}
+                        if isinstance(error_payload, dict):
+                            detail = str(
+                                error_payload.get("message")
+                                or error_payload.get("error")
+                                or ""
+                            ).strip()
+                    except Exception:
+                        detail = raw_error_body[:300].strip()
+
+                    suffix = f" ({detail})" if detail else ""
                     yield {
                         "type": "error",
-                        "message": f"Server error: {response.status_code}",
+                        "message": f"Server error: {response.status_code}{suffix}",
                     }
                     return
 
