@@ -123,4 +123,6 @@ def test_desktop_mcp_query_uses_bootstrap_context_and_focus_hint(monkeypatch, tm
     assert len(stream_payloads) == 1
     assert stream_payloads[0]["organization_id"] == "org-desktop"
     assert stream_payloads[0]["focus_hint"] == "content"
-    assert "Rory Routing Context" in stream_payloads[0]["message"]
+    assert stream_payloads[0]["message"] == "Write a LinkedIn post announcing our new feature."
+    assert stream_payloads[0]["mode"] == "chat"
+    assert stream_payloads[0]["route_hint"] == "fast"

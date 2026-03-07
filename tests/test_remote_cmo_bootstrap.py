@@ -98,8 +98,15 @@ def test_stream_query_bootstraps_context_and_caches_org(monkeypatch, tmp_path):
     assert stream_payloads[0]["organization_id"] == "org-abc"
     assert stream_payloads[1]["organization_id"] == "org-abc"
     assert stream_payloads[0]["focus_hint"] == "content"
+    assert stream_payloads[0]["mode"] == "chat"
+    assert stream_payloads[0]["route_hint"] == "fast"
+    assert stream_payloads[0]["requested_capability"] == "general"
+    assert stream_payloads[0]["raw_user_prompt"] == "Write a LinkedIn post about our new feature."
+    assert stream_payloads[0]["brand_context_profile"] == "content"
+    assert stream_payloads[0]["brand_context_available"] is True
+    assert "## Brand Identity" in stream_payloads[0]["brand_context"]
     assert "assistant_id" not in stream_payloads[0]
-    assert "Rory Routing Context" in stream_payloads[0]["message"]
+    assert stream_payloads[0]["message"] == "Write a LinkedIn post about our new feature."
     assert events_1[-1]["type"] == "complete"
     assert events_2[-1]["type"] == "complete"
 
@@ -196,3 +203,4 @@ def test_stream_query_includes_assistant_target_when_configured(monkeypatch, tmp
     assert len(stream_payloads) == 1
     assert stream_payloads[0]["assistant_id"] == "cmo_v3"
     assert stream_payloads[0]["focus_hint"] == "research"
+    assert "mode" not in stream_payloads[0]
