@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PLUGIN_DIR="$( dirname "$BIN_DIR" )"
+
+if [ -f "$PLUGIN_DIR/.env" ]; then
+    set -a
+    source "$PLUGIN_DIR/.env"
+    set +a
+fi
+
+VENV_PYTHON="$PLUGIN_DIR/.venv/bin/python"
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo "Warning: Virtual environment not found at $VENV_PYTHON. Using system python." >&2
+    VENV_PYTHON="python3"
+fi
+
+cd "$PLUGIN_DIR"
+exec "$VENV_PYTHON" robynn.py "$@"

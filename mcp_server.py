@@ -1,231 +1,197 @@
+import json
+import logging
 import os
 import sys
-import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
-import httpx
 from fastmcp import FastMCP
 
 TOOLS_DIR = os.path.join(os.path.dirname(__file__), "tools")
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
-from remote_cmo import RemoteCMO
-from url_config import join_url, resolve_cli_base_url
+from session_client import RobynnSessionClient, SessionClientError
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
-mcp = FastMCP("Robynn AI - Rory")
+DEFAULT_TOOLSET = os.environ.get("ROBYNN_MCP_TOOLSET", "minimal").strip().lower()
+if DEFAULT_TOOLSET not in {"minimal", "full"}:
+    DEFAULT_TOOLSET = "minimal"
+
+mcp = FastMCP("Robynn AI")
 
 
-def _get_headers(api_key: Optional[str]) -> Dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-    return headers
+def _get_client() -> RobynnSessionClient:
+    return RobynnSessionClient()
 
 
-def _api_get(path: str, api_key: Optional[str]) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    if not api_key:
-        return None, "Not connected. Set ROBYNN_API_KEY."
+def _format_error(exc: Exception) -> str:
+    if isinstance(exc, SessionClientError):
+        return str(exc)
+    return f"Unexpected error: {exc}"
 
-    url = join_url(resolve_cli_base_url(), path)
+
+def _run_agent(
+    agent: str,
+    *,
+    input_text: Optional[str] = None,
+    params: Optional[dict[str, Any]] = None,
+) -> str:
     try:
-        with httpx.Client(headers=_get_headers(api_key)) as client:
-            response = client.get(url, timeout=30.0)
-            response.raise_for_status()
-            data = response.json().get("data")
-            return data, None
+        payload = _get_client().run(agent, input_text=input_text, params=params)
     except Exception as exc:
-        return None, f"Failed to fetch {path}: {exc}"
+        return f"Error: {_format_error(exc)}"
+
+    data = payload.get("data", {}) if isinstance(payload, dict) else {}
+    output = data.get("output") if isinstance(data, dict) else None
+    if isinstance(output, str) and output.strip():
+        return output
+    return json.dumps(payload, indent=2)
 
 
-def _api_post(
-    path: str,
-    payload: Dict[str, Any],
-    api_key: Optional[str],
-) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    if not api_key:
-        return None, "Not connected. Set ROBYNN_API_KEY."
-
-    url = join_url(resolve_cli_base_url(), path)
+def _status_text() -> str:
     try:
-        with httpx.Client(headers=_get_headers(api_key)) as client:
-            response = client.post(url, json=payload, timeout=120.0)
-            parsed: Optional[Dict[str, Any]] = None
-            response_text = ""
-            try:
-                body = response.json()
-                if isinstance(body, dict):
-                    parsed = body
-            except Exception:
-                response_text = response.text.strip()
-
-            if response.status_code >= 400:
-                detail = ""
-                if isinstance(parsed, dict):
-                    detail = (
-                        str(parsed.get("error") or parsed.get("message") or "")
-                    ).strip()
-                if not detail:
-                    detail = response_text or response.reason_phrase or "Request failed"
-                return None, f"Failed to post {path}: {detail} (HTTP {response.status_code})"
-
-            if not isinstance(parsed, dict):
-                return None, f"Failed to post {path}: Unexpected response format"
-            return parsed, None
+        payload = _get_client().status()
     except Exception as exc:
-        return None, f"Failed to post {path}: {exc}"
+        return f"Error: {_format_error(exc)}"
+
+    data = payload.get("data", {}) if isinstance(payload, dict) else {}
+    active_org = data.get("active_organization", {}) if isinstance(data, dict) else {}
+    return (
+        "Robynn CLI connected\n"
+        f"Active org: {active_org.get('name') or active_org.get('id') or 'unknown'}\n"
+        f"User ID: {data.get('user_id', 'unknown')}\n"
+        f"Token balance: {data.get('token_balance', 'unknown')}\n"
+        f"Can execute: {'yes' if data.get('can_execute') else 'no'}"
+    )
 
 
-def _is_voice_configured(context: Dict[str, Any]) -> bool:
-    legacy_voice = context.get("voiceAndTone")
-    if isinstance(legacy_voice, str) and legacy_voice.strip():
-        return True
+def _usage_text() -> str:
+    try:
+        payload = _get_client().usage()
+    except Exception as exc:
+        return f"Error: {_format_error(exc)}"
 
-    voice = context.get("voice")
-    if not isinstance(voice, dict):
-        return False
+    data = payload.get("data", {}) if isinstance(payload, dict) else {}
+    return (
+        f"Billing model: {data.get('billing_model', 'unknown')}\n"
+        f"Token balance: {data.get('token_balance', 'unknown')}\n"
+        f"Can execute: {'yes' if data.get('can_execute') else 'no'}"
+    )
 
-    core_attributes = voice.get("coreAttributes")
-    if isinstance(core_attributes, list):
-        if any(isinstance(attr, str) and attr.strip() for attr in core_attributes):
-            return True
 
-    tone_spectrum = voice.get("toneSpectrum")
-    if isinstance(tone_spectrum, dict) and any(
-        value is not None for value in tone_spectrum.values()
-    ):
-        return True
+def _context_text(scope: str) -> str:
+    try:
+        payload = _get_client().context_get(scope)
+    except Exception as exc:
+        return f"Error: {_format_error(exc)}"
+    return json.dumps(payload.get("data", {}), indent=2)
 
-    return False
+
+def _register_tools(toolset: str) -> None:
+    mcp.tool(
+        name="robynn_run",
+        annotations={"openWorldHint": True},
+    )(robynn_run)
+    mcp.tool(
+        name="robynn_status",
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+    )(robynn_status)
+    mcp.tool(
+        name="robynn_usage",
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+    )(robynn_usage)
+    mcp.tool(
+        name="robynn_context_get",
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+    )(robynn_context_get)
+
+    if toolset == "full":
+        mcp.tool(name="rory_query", annotations={"openWorldHint": True})(rory_query)
+        mcp.tool(name="rory_research_company", annotations={"openWorldHint": True})(
+            rory_research_company
+        )
+        mcp.tool(name="rory_research_competitors", annotations={"openWorldHint": True})(
+            rory_research_competitors
+        )
+        mcp.tool(name="rory_write_content", annotations={"openWorldHint": True})(
+            rory_write_content
+        )
+        mcp.tool(
+            name="rory_status",
+            annotations={"readOnlyHint": True, "openWorldHint": True},
+        )(rory_status)
+        mcp.tool(
+            name="rory_usage",
+            annotations={"readOnlyHint": True, "openWorldHint": True},
+        )(rory_usage)
+
+
+def robynn_run(agent: str, input_text: str = "", params_json: str = "") -> str:
+    """Run a Robynn agent by name. Use input_text for CMO-style prompts or params_json for structured agents."""
+    params = None
+    if params_json.strip():
+        try:
+            parsed = json.loads(params_json)
+        except json.JSONDecodeError as exc:
+            return f"Error: invalid params_json - {exc}"
+        if not isinstance(parsed, dict):
+            return "Error: params_json must decode to a JSON object"
+        params = parsed
+
+    return _run_agent(agent, input_text=input_text or None, params=params)
+
+
+def robynn_status() -> str:
+    """Check the active Robynn org and whether execution is available."""
+    return _status_text()
+
+
+def robynn_usage() -> str:
+    """Check current Robynn usage and token balance."""
+    return _usage_text()
+
+
+def robynn_context_get(scope: str = "summary") -> str:
+    """Fetch scoped Robynn context only when explicitly requested."""
+    return _context_text(scope)
 
 
 def _run_cmo_query(message: str) -> str:
-    cmo = RemoteCMO()
-    for event in cmo.stream_query(message):
-        event_type = event.get("type")
-        if event_type == "complete":
-            data = event.get("data", {})
-            return data.get("response", "Task completed.")
-        if event_type == "error":
-            return f"Error: {event.get('message')}"
-    return "No response received."
+    return _run_agent("cmo", input_text=message)
 
 
-@mcp.tool(annotations={"openWorldHint": True})
 def rory_query(message: str) -> str:
     """Send any marketing request to Rory."""
     return _run_cmo_query(message)
 
 
-@mcp.tool(annotations={"openWorldHint": True})
 def rory_research_company(company: str) -> str:
     """Research a company."""
     return _run_cmo_query(f"research {company}")
 
 
-@mcp.tool(annotations={"openWorldHint": True})
 def rory_research_competitors(company: str) -> str:
     """Analyze competitors for a company."""
     return _run_cmo_query(f"competitors {company}")
 
 
-@mcp.tool(annotations={"openWorldHint": True})
 def rory_write_content(content_type: str, topic: str) -> str:
-    """Create marketing content (linkedin, tweet, blog, email)."""
+    """Create marketing content."""
     return _run_cmo_query(f"write {content_type} {topic}")
 
 
-@mcp.tool(annotations={"openWorldHint": True})
-def rory_share_html(html: str, title: str = "", ttl_hours: int = 24) -> str:
-    """Create a share link for provided HTML and return its secure URL."""
-    api_key = os.environ.get("ROBYNN_API_KEY")
-    if not api_key:
-        return (
-            "Not connected. Run: rory init or set ROBYNN_API_KEY in environment."
-        )
-
-    payload = {
-        "agentId": "rory",
-        "params": {
-            "action": "share",
-            "title": title or "Shared HTML",
-            "html": html,
-            "ttlHours": ttl_hours,
-            "sourceFilename": "shared.html",
-        },
-    }
-
-    data, error = _api_post("/execute", payload, api_key)
-    if error:
-        return error
-    if not data:
-        return "No response from Rory share API."
-
-    public_url = data.get("publicUrl") or data.get("data", {}).get("publicUrl")
-    if not public_url:
-        return f"Unexpected share response: {data}"
-    return f"Share link: {public_url}"
-
-
-@mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
 def rory_status() -> str:
-    """Check API connection and Brand Hub status."""
-    api_key = os.environ.get("ROBYNN_API_KEY")
-    if not api_key:
-        return (
-            "Status: Not Connected (Anonymous Mode)\n"
-            "Run: rory config <your_api_key>\n"
-            "Get a key at https://robynn.ai/settings/api-keys"
-        )
-
-    context, error = _api_get("/context", api_key)
-    if error:
-        return f"Status: Connected, but unable to fetch context. {error}"
-    if not context:
-        return "Status: Connected, but no brand context found."
-
-    organization = context.get("organizationId", "Loaded")
-    company = context.get("companyName", "Not Set")
-    website = context.get("companyWebsite", "Not Set")
-    voice = "Configured" if _is_voice_configured(context) else "Not configured"
-    return (
-        "Status: Connected\n"
-        f"Organization: {organization}\n"
-        f"Company: {company}\n"
-        f"Website: {website}\n"
-        f"Brand Voice: {voice}"
-    )
+    """Compatibility alias for Robynn status."""
+    return _status_text()
 
 
-@mcp.tool(annotations={"readOnlyHint": True, "openWorldHint": True})
 def rory_usage() -> str:
-    """Check remaining task quota."""
-    api_key = os.environ.get("ROBYNN_API_KEY")
-    if not api_key:
-        return (
-            "Tier: Anonymous\n"
-            "Limit: 5 tasks / day (Per IP)\n"
-            "Sign up at https://robynn.ai for higher limits."
-        )
+    """Compatibility alias for Robynn usage."""
+    return _usage_text()
 
-    usage, error = _api_get("/usage", api_key)
-    if error:
-        return f"Usage: Unable to fetch usage details. {error}"
-    if not usage:
-        return "Usage: No usage data available."
 
-    tier = usage.get("tier", "Unknown")
-    remaining = usage.get("remaining", 0)
-    total = usage.get("total", 0)
-    reset_date = usage.get("resetDate")
-    reset_line = f"\nResets on: {reset_date}" if reset_date else ""
-    return (
-        f"Tier: {tier}\n"
-        f"Remaining: {remaining} of {total} tasks"
-        f"{reset_line}"
-    )
+_register_tools(DEFAULT_TOOLSET)
 
 
 if __name__ == "__main__":
