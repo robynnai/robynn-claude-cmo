@@ -59,11 +59,15 @@ class RobynnSessionClient:
         state = self.store.load()
         return {
             "has_api_key": bool(state.get("api_key")),
+            "organization_count": len(state.get("organizations", []))
+            if isinstance(state.get("organizations"), list)
+            else 0,
             "selected_org_id": state.get("selected_org_id"),
             "selected_org_name": state.get("selected_org_name"),
             "has_access_token": bool(state.get("access_token")),
             "has_refresh_token": bool(state.get("refresh_token")),
             "access_token_expires_at": state.get("access_token_expires_at"),
+            "requires_org_selection": not bool(state.get("selected_org_id")),
             "storage": "keyring" if self._using_keyring() else "file",
         }
 
@@ -82,7 +86,7 @@ class RobynnSessionClient:
         self.store.clear()
 
     def list_orgs(self) -> dict[str, Any]:
-        headers = self._resolve_auth_headers(prefer_session=True)
+        headers = self._resolve_auth_headers(allow_api_key_fallback=True)
         payload = self._get("/orgs", headers=headers)
 
         state = self.store.load()
@@ -113,12 +117,15 @@ class RobynnSessionClient:
         return payload
 
     def status(self) -> dict[str, Any]:
+        self._require_selected_org()
         return self._authed_get("/status")
 
     def usage(self) -> dict[str, Any]:
+        self._require_selected_org()
         return self._authed_get("/usage")
 
     def context_get(self, scope: str) -> dict[str, Any]:
+        self._require_selected_org()
         return self._authed_get(f"/context/{scope}")
 
     def run(
@@ -128,6 +135,7 @@ class RobynnSessionClient:
         input_text: Optional[str] = None,
         params: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
+        self._require_selected_org()
         payload: dict[str, Any] = {}
         if input_text:
             payload["input"] = input_text
@@ -147,7 +155,7 @@ class RobynnSessionClient:
         path: str,
         json_payload: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        headers = self._resolve_auth_headers(prefer_session=True)
+        headers = self._resolve_auth_headers(allow_api_key_fallback=False)
 
         try:
             return self._request(method, path, headers=headers, json_payload=json_payload)
@@ -155,7 +163,7 @@ class RobynnSessionClient:
             if "401" not in str(exc):
                 raise
             self._refresh_session()
-            headers = self._resolve_auth_headers(prefer_session=True)
+            headers = self._resolve_auth_headers(allow_api_key_fallback=False)
             return self._request(method, path, headers=headers, json_payload=json_payload)
 
     def _refresh_session(self) -> None:
@@ -223,31 +231,58 @@ class RobynnSessionClient:
         )
         self.store.save(state)
 
-    def _resolve_auth_headers(self, prefer_session: bool = True) -> dict[str, str]:
+    def _resolve_auth_headers(self, allow_api_key_fallback: bool) -> dict[str, str]:
         state = self.store.load()
-        if prefer_session:
-            access_token = state.get("access_token")
-            expires_at = state.get("access_token_expires_at")
-            if (
-                isinstance(access_token, str)
-                and access_token
-                and isinstance(expires_at, (int, float))
-                and expires_at > time.time() + 30
-            ):
-                return {
-                    "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/json",
-                }
-            if isinstance(state.get("refresh_token"), str) and state.get("refresh_token"):
-                self._refresh_session()
-                return self._resolve_auth_headers(prefer_session=True)
+        access_token = state.get("access_token")
+        expires_at = state.get("access_token_expires_at")
+        if (
+            isinstance(access_token, str)
+            and access_token
+            and isinstance(expires_at, (int, float))
+            and expires_at > time.time() + 30
+        ):
+            return {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            }
+
+        if isinstance(state.get("refresh_token"), str) and state.get("refresh_token"):
+            self._refresh_session()
+            return self._resolve_auth_headers(
+                allow_api_key_fallback=allow_api_key_fallback
+            )
 
         api_key = state.get("api_key")
-        if isinstance(api_key, str) and api_key:
+        if allow_api_key_fallback and isinstance(api_key, str) and api_key:
             return {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             }
+
+        if isinstance(api_key, str) and api_key:
+            selected_org_id = state.get("selected_org_id")
+            if isinstance(selected_org_id, str) and selected_org_id:
+                raise SessionClientError(
+                    f"Session expired. Run `robynn org use {selected_org_id}` to restore access."
+                )
+            raise SessionClientError(
+                "No active organization selected. Run `robynn org list` and then `robynn org use <org_id>`."
+            )
+
+        raise SessionClientError(
+            "Not authenticated. Run `robynn auth login` first."
+        )
+
+    def _require_selected_org(self) -> None:
+        state = self.store.load()
+        selected_org_id = state.get("selected_org_id")
+        if isinstance(selected_org_id, str) and selected_org_id:
+            return
+
+        if isinstance(state.get("api_key"), str) and state.get("api_key"):
+            raise SessionClientError(
+                "No active organization selected. Run `robynn org list` and then `robynn org use <org_id>`."
+            )
 
         raise SessionClientError(
             "Not authenticated. Run `robynn auth login` first."
