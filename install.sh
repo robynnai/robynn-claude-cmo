@@ -133,6 +133,9 @@ fi
 if [ -f "bin/rory" ]; then
     chmod +x bin/rory
 fi
+if [ -f "bin/robynn" ]; then
+    chmod +x bin/robynn
+fi
 
 echo -e "  ${GREEN}✓${NC} Plugin files ready"
 
