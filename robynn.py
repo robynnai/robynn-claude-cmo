@@ -196,6 +196,15 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--params", help="JSON object for structured agent params")
     run_parser.add_argument("input_parts", nargs="*")
 
+    website_parser = subparsers.add_parser("website")
+    website_subparsers = website_parser.add_subparsers(
+        dest="website_command", required=True
+    )
+    website_audit_v2_parser = website_subparsers.add_parser("audit-v2")
+    website_audit_v2_parser.add_argument(
+        "--params", required=True, help="JSON object for Website Auto-Healer v2"
+    )
+
     ask_parser = subparsers.add_parser("ask")
     ask_parser.add_argument("message", nargs="+", help="Prompt for the CMO agent")
 
@@ -213,9 +222,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     client = RobynnSessionClient()
 
     try:
@@ -308,6 +317,15 @@ def main() -> int:
                 client,
                 agent=args.agent,
                 input_text=_resolve_run_input(args),
+                params_raw=args.params,
+                json_output=args.json,
+            )
+
+        if args.command == "website" and args.website_command == "audit-v2":
+            return _run_command(
+                client,
+                agent="website-audit-v2",
+                input_text=None,
                 params_raw=args.params,
                 json_output=args.json,
             )

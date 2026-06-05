@@ -107,6 +107,9 @@ def _register_tools(toolset: str) -> None:
     )(robynn_context_get)
 
     if toolset == "full":
+        mcp.tool(name="robynn_website_audit_v2", annotations={"openWorldHint": True})(
+            robynn_website_audit_v2
+        )
         mcp.tool(name="rory_query", annotations={"openWorldHint": True})(rory_query)
         mcp.tool(name="rory_research_company", annotations={"openWorldHint": True})(
             rory_research_company
@@ -155,6 +158,17 @@ def robynn_usage() -> str:
 def robynn_context_get(scope: str = "summary") -> str:
     """Fetch scoped Robynn context only when explicitly requested."""
     return _context_text(scope)
+
+
+def robynn_website_audit_v2(params_json: str) -> str:
+    """Run Website Auto-Healer v2 with a JSON params object."""
+    try:
+        parsed = json.loads(params_json)
+    except json.JSONDecodeError as exc:
+        return f"Error: invalid params_json - {exc}"
+    if not isinstance(parsed, dict):
+        return "Error: params_json must decode to a JSON object"
+    return _run_agent("website-audit-v2", params=parsed)
 
 
 def _run_cmo_query(message: str) -> str:
