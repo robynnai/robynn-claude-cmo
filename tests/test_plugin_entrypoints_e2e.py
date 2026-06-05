@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import importlib
 from typing import Any
 
 import mcp_server
@@ -50,3 +52,13 @@ def test_desktop_mcp_query_uses_session_client(monkeypatch):
     assert captured["agent"] == "cmo"
     assert captured["input_text"] == "Write a LinkedIn post announcing our new feature."
     assert captured["params"] is None
+
+
+def test_local_mcp_full_toolset_includes_website_audit_v2(monkeypatch):
+    monkeypatch.setenv("ROBYNN_MCP_TOOLSET", "full")
+
+    reloaded = importlib.reload(mcp_server)
+    tool_names = {tool.name for tool in asyncio.run(reloaded.mcp.list_tools())}
+
+    assert hasattr(reloaded, "robynn_website_audit_v2")
+    assert "robynn_website_audit_v2" in tool_names
