@@ -178,7 +178,7 @@ class TestFirecrawlClient:
 
     def test_client_initialization(self, firecrawl_client):
         """Test Firecrawl client initializes correctly."""
-        assert firecrawl_client.BASE_URL == "https://api.firecrawl.dev/v1"
+        assert firecrawl_client.BASE_URL == "https://api.firecrawl.dev/v2"
 
     def test_headers_include_bearer_token(self, firecrawl_client, mock_env_vars):
         """Test headers include Bearer authorization."""
@@ -221,8 +221,8 @@ class TestFirecrawlClient:
             firecrawl_client.screenshot(url="example.com", full_page=True)
 
             payload = mock_post.call_args[1]["json"]
-            assert payload["formats"] == ["screenshot"]
-            assert payload["screenshot"]["fullPage"] is True
+            assert payload["formats"] == [{"type": "screenshot", "fullPage": True}]
+            assert payload["onlyMainContent"] is False
 
     def test_extract_links(self, firecrawl_client):
         """Test extract_links calls scrape with links format."""
@@ -235,8 +235,26 @@ class TestFirecrawlClient:
             links = firecrawl_client.extract_links("example.com")
 
             assert len(links) == 2
+            assert links == ["https://example.com/page1", "https://example.com/page2"]
             mock_scrape.assert_called_once()
             assert mock_scrape.call_args[1]["formats"] == ["links"]
+
+    def test_extract_links_normalizes_v2_objects(self, firecrawl_client):
+        """Test extract_links flattens v2 link objects to URL strings."""
+        with patch.object(firecrawl_client, 'scrape') as mock_scrape:
+            mock_scrape.return_value = {
+                "success": True,
+                "data": {
+                    "links": [
+                        {"url": "https://example.com/page1", "title": "One"},
+                        "https://example.com/page2",
+                    ]
+                }
+            }
+
+            links = firecrawl_client.extract_links("example.com")
+
+            assert links == ["https://example.com/page1", "https://example.com/page2"]
 
     def test_crawl_builds_correct_payload(self, firecrawl_client):
         """Test crawl method builds correct payload."""

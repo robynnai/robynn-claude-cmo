@@ -34,7 +34,7 @@ from tools.errors import format_missing_credential_error, format_error_message
 class FirecrawlClient(BaseAPIClient):
     """Firecrawl API client for web scraping and screenshots."""
 
-    BASE_URL = "https://api.firecrawl.dev/v1"
+    BASE_URL = "https://api.firecrawl.dev/v2"
     SERVICE_NAME = "firecrawl"
 
     def __init__(self):
@@ -147,10 +147,8 @@ class FirecrawlClient(BaseAPIClient):
 
         payload = {
             "url": clean_url(url),
-            "formats": ["screenshot"],
-            "screenshot": {
-                "fullPage": full_page
-            }
+            "formats": [{"type": "screenshot", "fullPage": full_page}],
+            "onlyMainContent": False,
         }
         
         return self.post("/scrape", json=payload)
@@ -312,6 +310,25 @@ class FirecrawlClient(BaseAPIClient):
         
         raise TimeoutError(f"Crawl did not complete within {max_wait} seconds")
     
+
+    def _normalize_links(self, links) -> list[str]:
+        """Accept v1 string links or v2 `{url, title, description}` objects."""
+        if not isinstance(links, list):
+            return []
+        output: list[str] = []
+        seen: set[str] = set()
+        for link in links:
+            url = ""
+            if isinstance(link, str):
+                url = link.strip()
+            elif isinstance(link, dict):
+                url = str(link.get("url") or link.get("href") or "").strip()
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            output.append(url)
+        return output
+
     def extract_links(self, url: str) -> list[str] | dict[str, Any]:
         """
         Extract all links from a webpage.
@@ -330,8 +347,8 @@ class FirecrawlClient(BaseAPIClient):
         result = self.scrape(url, formats=["links"])
         
         if result.get("success") and result.get("data"):
-            return result["data"].get("links", [])
-        
+            return self._normalize_links(result["data"].get("links", []))
+
         return []
 
 
